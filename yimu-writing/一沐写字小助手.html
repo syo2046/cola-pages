@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>一沐写字小助手</title>
+  <style>
+    :root {
+      --page-bg: #f6efe5;
+      --bg-a: rgba(255,255,255,.58);
+      --bg-b: rgba(194,165,118,.18);
+      --bg-c: rgba(143,106,61,.08);
+      --card: #fffdf8;
+      --ink: #2b241c;
+      --sub: #6f6253;
+      --line: #d8cdbd;
+      --accent: #8f6a3d;
+      --accent-soft: #efe3d3;
+      --shadow: 0 8px 24px rgba(71,54,32,.08);
+      --glyph-font: "Kaiti SC", "STKaiti", "KaiTi", serif;
+      --page-width: 1560px;
+      --cell-size: 72px;
+      --char-size: 52px;
+    }
+    * { box-sizing: border-box; }    body {
+      margin: 0;
+      position: relative;
+      isolation: isolate;
+      overflow-x: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+      color: var(--ink);
+      background-color: var(--page-bg);
+      background-image:
+        radial-gradient(circle at 10% 18%, var(--bg-a) 0 16%, transparent 34%),
+        radial-gradient(circle at 90% 10%, var(--bg-b) 0 12%, transparent 30%),
+        radial-gradient(circle at 82% 88%, var(--bg-c) 0 12%, transparent 28%),
+        linear-gradient(135deg, rgba(255,255,255,.16), transparent 44%);
+      background-attachment: fixed;
+      line-height: 1.5;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .88;
+      background-repeat: repeat;
+      background-size: 220px 220px;
+      background-image: var(--theme-pattern);
+    }
+    body > * { position: relative; z-index: 1; }
+    body[data-theme="traditional"] {
+      --page-bg: #f6efe5;
+      --bg-a: rgba(255,255,255,.58);
+      --bg-b: rgba(194,165,118,.18);
+      --bg-c: rgba(143,106,61,.08);
+      --card: #fffdf8;
+      --ink: #2b241c;
+      --sub: #6f6253;
+      --line: #d8cdbd;
+      --accent: #8f6a3d;
+      --accent-soft: #efe3d3;
+      --shadow: 0 8px 24px rgba(71,54,32,.08);
+      --theme-pattern:
+        radial-gradient(circle at 22px 22px, rgba(143,106,61,.16) 0 2px, transparent 2.2px),
+        radial-gradient(circle at 112px 112px, rgba(143,106,61,.08) 0 2px, transparent 2.2px),
+        repeating-linear-gradient(90deg, transparent 0 34px, rgba(143,106,61,.06) 34px 35px),
+        repeating-linear-gradient(0deg, transparent 0 34px, rgba(143,106,61,.05) 34px 35px);
+    }
+    body[data-theme="fresh"] {
+      --page-bg: #e8f3ef;
+      --bg-a: rgba(255,255,255,.66);
+      --bg-b: rgba(121,178,157,.20);
+      --bg-c: rgba(47,141,119,.08);
+      --card: #fcfffe;
+      --ink: #23403b;
+      --sub: #5f7a73;
+      --line: #cfe4da;
+      --accent: #2f8d77;
+      --accent-soft: #dff3eb;
+      --shadow: 0 10px 28px rgba(35,64,59,.08);
+      --theme-pattern:
+        radial-gradient(circle at 30px 30px, rgba(47,141,119,.16) 0 3px, transparent 3.4px),
+        radial-gradient(circle at 140px 110px, rgba(121,178,157,.18) 0 4px, transparent 4.5px),
+        repeating-linear-gradient(45deg, transparent 0 28px, rgba(47,141,119,.06) 28px 29px),
+        repeating-linear-gradient(-45deg, transparent 0 42px, rgba(121,178,157,.05) 42px 43px);
+    }
+    body[data-theme="cartoon"] {
+      --page-bg: #f5f1ff;
+      --bg-a: rgba(255,255,255,.68);
+      --bg-b: rgba(196,177,250,.22);
+      --bg-c: rgba(141,98,213,.08);
+      --card: #ffffff;
+      --ink: #42345f;
+      --sub: #78689a;
+      --line: #eadcf9;
+      --accent: #8d62d5;
+      --accent-soft: #efe3ff;
+      --shadow: 0 10px 28px rgba(74,49,118,.08);
+      --theme-pattern:
+        radial-gradient(circle at 24px 24px, rgba(141,98,213,.16) 0 3px, transparent 3.4px),
+        radial-gradient(circle at 92px 60px, rgba(255,182,193,.18) 0 8px, transparent 8.5px),
+        radial-gradient(circle at 168px 140px, rgba(141,98,213,.10) 0 5px, transparent 5.5px),
+        repeating-linear-gradient(135deg, transparent 0 26px, rgba(141,98,213,.04) 26px 27px),
+        repeating-linear-gradient(45deg, transparent 0 36px, rgba(255,182,193,.05) 36px 37px);
+    }
+    .wrap { position: relative; z-index: 1; max-width: var(--page-width); margin: 0 auto; padding: 24px 20px 48px; }
+    .hero, .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+    .hero { padding: 24px; margin-bottom: 18px; }
+    .hero-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+    h1 { margin: 0; font-size: 34px; }
+    .subtitle { font-size: 18px; margin-bottom: 10px; color: var(--accent); font-weight: 700; }
+    .desc, .hint, .muted { color: var(--sub); font-size: 14px; }
+    .title-edit-btn, button {
+      border: 1px solid rgba(0,0,0,.06);
+      cursor: pointer;
+      transition: .15s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    .title-edit-btn { padding: 6px 10px; border-radius: 999px; font-size: 12px; background: #f1e4d2; color: var(--accent); border-color: rgba(143,106,61,.18); }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(420px, 1fr); gap: 20px; align-items: start; }
+    .left, .right { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+    .right { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-content: start; }
+    .card { padding: 18px; min-width: 0; }
+    .span-2 { grid-column: 1 / -1; }
+    .card h2 { margin: 0 0 12px; font-size: 20px; }
+    .label { display: block; font-weight: 700; margin-bottom: 8px; }
+    textarea, input[type="text"], select {
+      width: 100%; border: 1px solid var(--line); background: #fff; color: var(--ink);
+      border-radius: 14px; padding: 12px 14px; font-size: 15px; outline: none;
+    }
+    textarea { min-height: 96px; resize: vertical; }
+    .btn-row, .inline-row, .grid-2, .grid-3 { display: grid; gap: 8px; }
+    .btn-row { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 10px; }
+    .inline-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    button { padding: 11px 14px; border-radius: 14px; background: #faf3e6; color: var(--ink); font-size: 14px; }
+    .primary { background: var(--accent); color: #fff; border-color: transparent; }
+    .success { background: #2f7d4a; color: #fff; }
+    .danger { background: #a54545; color: #fff; }
+    .tiny-btn { padding: 6px 10px; border-radius: 10px; font-size: 12px; background: #efe5d8; }
+    .mini-btn { padding: 8px 12px; border-radius: 999px; font-size: 13px; background: #f4ecdf; }
+    .tag-row, .group-grid { display: grid; gap: 8px; margin-top: 10px; }
+    .tag-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .source-note {
+      margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: #faf6ef;
+      border: 1px dashed var(--line); font-size: 13px; color: var(--sub);
+    }
+    .source-preview {
+      margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: #fff;
+      border: 1px solid var(--line); font-size: 13px; color: var(--ink); min-height: 52px; line-height: 1.45;
+    }
+    .settings-grid { display: grid; gap: 12px; }
+    .settings-panel { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: #fff; }
+    .sheet-head { text-align: center; margin-bottom: 18px; }
+    .sheet-head h3 { margin: 0; font-size: 24px; }
+    .sheet-head .meta-line { margin-top: 6px; font-size: 13px; color: var(--sub); }
+    .sheet-grid { display: grid; gap: 14px; }
+    .char-row { display: block; }
+    .cells {
+      display: grid; gap: 8px; justify-content: start; align-items: start; width: max-content;
+      grid-template-columns: repeat(var(--cols), var(--cell-size, 72px));
+    }
+    .cell {
+      width: var(--cell-size, 72px); height: var(--cell-size, 72px); border: 1.6px solid #bca889; position: relative; overflow: hidden;
+      background: rgba(255,255,255,.64);
+    }
+    .line-v, .line-h, .line-d1, .line-d2 { position: absolute; background: transparent; pointer-events: none; }
+    .line-v { left: 50%; top: 0; width: 1px; height: 100%; border-left: 1px solid #bca889; transform: translateX(-.5px); }
+    .line-h { left: 0; top: 50%; width: 100%; height: 1px; border-top: 1px solid #bca889; transform: translateY(-.5px); }
+    .line-d1, .line-d2 { left: -22.5%; top: 50%; width: 145%; border-top: 1px solid #bca889; transform-origin: center; }
+    .line-d1 { transform: rotate(45deg); }
+    .line-d2 { transform: rotate(-45deg); }
+    .sample-cell .sample, .sample-cell .demo, .ghost, .template {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-family: var(--glyph-font); line-height: 1; z-index: 2; font-size: var(--char-size, 52px); font-weight: 500;
+    }
+    .sample-cell .sample { color: var(--accent); font-size: calc(var(--char-size, 52px) * 1.34); }
+    .sample-cell .demo { color: var(--accent); font-size: calc(var(--char-size, 52px) * 1.16); }
+    .ghost { color: rgba(186, 64, 64, .22); font-size: calc(var(--char-size, 52px) * 1.06); }
+    .template { color: rgba(186, 64, 64, .28); opacity: 1; font-size: calc(var(--char-size, 52px) * 1.08); font-weight: 500; }
+    .template-cell .template { opacity: 1; }
+    .template-mode .sheet-grid { gap: 10px; }
+    .sheet-footer {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; font-size: 14px;
+    }
+    .footer-line { border-bottom: 1px solid var(--line); min-height: 28px; }
+    .record-list { display: grid; gap: 8px; margin-top: 10px; }
+    .record-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; }
+    .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; margin-left: 8px; }
+    .pill.ok { background: #dcefe3; color: #1f6037; }
+    .pill.no { background: #f4dcdc; color: #8b3030; }
+    .footer-note { margin-top: 16px; text-align: center; color: var(--sub); font-size: 13px; }
+    .record-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .reward-box { margin-top: 12px; border: 1px dashed var(--line); border-radius: 14px; padding: 12px; background: #faf6ef; }
+    .stars { font-size: 24px; letter-spacing: 4px; color: #d29a1f; margin-top: 4px; }
+    .plan-box { border: 1px dashed var(--line); background: #faf6ef; border-radius: 14px; padding: 12px; margin-top: 12px; }
+    .plan-day { font-size: 18px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+    .plan-meta { display: grid; gap: 6px; font-size: 14px; color: var(--ink); }
+    .mistake-card {
+      display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); column-gap: 16px; row-gap: 10px; align-items: start;
+    }
+    .mistake-card > h2, .mistake-card > .muted, .mistake-card > .hint { grid-column: 1 / -1; }
+    .mistake-card > div:nth-of-type(1) { grid-column: 1; }
+    .mistake-card > .btn-row { grid-column: 2; margin-top: 0 !important; align-self: start; }
+    .mistake-card > div:nth-of-type(2) { grid-column: 2; margin-top: 0 !important; }
+    .muted-line { color: var(--sub); font-size: 13px; }
+    @media (max-width: 1120px) {
+      .layout { grid-template-columns: 1fr; }
+      .right { grid-template-columns: 1fr; }
+      .span-2 { grid-column: auto; }
+    }
+    @media (max-width: 900px) {
+      .btn-row, .grid-2, .grid-3, .inline-row, .tag-row, .group-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 28px; }
+    }
+    @media print {
+      body { background: #fff !important; background-image: none !important; }
+      .hero, .left > .card:not(.print-card), .right > .card:not(.print-card), .footer-note { display: none !important; }
+      .wrap { max-width: none; padding: 0; }
+      .layout { display: block; }
+      .print-card { border: none; box-shadow: none; padding: 0; }
+      .preview-box { border: none; padding: 0; }
+    }
+  </style>
+</head>
+<body data-theme="traditional">
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-title">
+        <h1 id="pageTitle">一沐写字小助手</h1>
+        <button type="button" class="title-edit-btn" id="editTitleBtn">修改</button>
+      </div>
+      <div class="subtitle">每天10分钟，先把字写稳，再谈好看。</div>
+      <div class="desc">适合一年级孩子的家庭写字练习工具。输入今天要练的字，生成可打印字帖，顺手打卡记录。</div>
+    </section>
+
+    <div class="layout">
+      <div class="left">
+        <section class="card">
+          <h2>今天练什么？</h2>
+          <label class="label" for="charsInput">输入今天要练的字或词</label>
+          <textarea id="charsInput" placeholder="请输入今天要练的字或词，例如：春 风 花 入 / 真 写 我 学"></textarea>
+          <div class="hint">建议每次练 8 个字左右，但会根据格子大小自动调整，别贪多。</div>
+          <div class="tag-row">
+            <button type="button" class="mini-btn" id="presetBasicBtn">基础字预置</button>
+            <button type="button" class="mini-btn" id="presetStructureBtn">结构字预置</button>
+            <button type="button" class="mini-btn" id="presetMistakeBtn">常错字预置</button>
+          </div>
+          <div class="group-grid">
+            <button type="button" class="mini-btn" id="groupBoxBtn">方框字组</button>
+            <button type="button" class="mini-btn" id="groupLeftRightBtn">左右结构组</button>
+            <button type="button" class="mini-btn" id="groupSingleBtn">独体字组</button>
+            <button type="button" class="mini-btn" id="groupClassBtn">课堂常用字组</button>
+          </div>
+          <div class="btn-row">
+            <button type="button" id="clearBtn">清空内容</button>
+            <button type="button" id="exampleBtn">填入示例</button>
+            <button type="button" id="mistakeBtn">加入常错字</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>怎么练？</h2>
+          <div class="radio-group">
+            <label class="mode"><input type="radio" name="mode" value="mixed"><span class="mode-title">混合版</span><small>先看示范，再描一个，后面自己写。</small></label>
+            <label class="mode"><input type="radio" name="mode" value="trace" checked><span class="mode-title">描红版（默认）</span><small>先顺着写，降低畏难感。</small></label>
+            <label class="mode"><input type="radio" name="mode" value="copy"><span class="mode-title">临写版</span><small>只给示范，后面独立完成。</small></label>
+          </div>
+          <div class="hint" style="margin-top:10px;">现在默认就是描红版，先把胆子练出来，再慢慢过渡到混合版和临写版。</div>
+        </section>
+
+        <section class="card">
+          <h2>字帖怎么出？</h2>
+          <div class="grid-2">
+            <div>
+              <label class="label" for="gridType">格子类型</label>
+              <select id="gridType"><option value="tian" selected>田字格</option><option value="mi">米字格</option></select>
+              <div class="muted">一年级默认用田字格，更贴近日常语文书写。</div>
+            </div>
+            <div>
+              <label class="label" for="cellSize">字格大小</label>
+              <select id="cellSize"><option value="small" selected>小</option><option value="medium">中</option><option value="large">大</option></select>
+              <div class="muted">大格子会自动减少每行数量，保证不出画面。</div>
+            </div>
+          </div>
+          <div class="hint" style="margin-top:10px;">每个字默认练的次数会跟纸张宽度一起算，不再死卡 8 个。</div>
+          <div class="btn-row" style="margin-top:14px;">
+            <button type="button" class="primary" id="generateBtn">生成今日字帖</button>
+            <button type="button" id="printBtn">打印字帖</button>
+            <button type="button" id="pdfBtn">导出PDF</button>
+          </div>
+        </section>
+
+        <section class="card print-card">
+          <div id="previewBox" class="preview-box">
+            <div class="sheet-head">
+              <h3 id="previewTitle">今日练习字帖</h3>
+              <div class="muted" id="previewMeta">今天任务：把字写稳，不求快</div>
+              <div class="meta-line" id="sheetMeta">田字格｜描红版｜动态每字次数</div>
+            </div>
+            <div id="sheetGrid" class="sheet-grid"></div>
+            <div class="sheet-footer">
+              <div>今天我最满意的两个字：<div class="footer-line"></div></div>
+              <div>家长备注：<div class="footer-line"></div></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="right">
+        <section class="card span-2">
+          <h2>30天打卡训练</h2>
+          <div class="muted">不想每天自己想，就直接按这套走。拉成30天，边练边打卡，先写稳，再写顺，最后盯常错字。</div>
+          <div style="margin-top:12px;">
+            <label class="label" for="planDay">选择训练天数</label>
+            <select id="planDay"></select>
+          </div>
+          <div class="btn-row" style="margin-top:12px;">
+            <button type="button" class="primary" id="applyPlanBtn">套用今天内容</button>
+            <button type="button" id="prevPlanBtn">上一天</button>
+            <button type="button" id="nextPlanBtn">下一天</button>
+          </div>
+          <div id="planBox" class="plan-box"></div>
+        </section>
+
+        <section class="card span-2">
+          <h2>今日任务</h2>
+          <div class="task-list" id="taskList">
+            <div class="record-item">练习内容：还没填。先输几个字，别整太多。</div>
+            <div class="record-item">建议时长：10 分钟</div>
+            <div class="record-item">今日重点：字别出格，横别太斜</div>
+            <div class="record-item">家长提醒：今天只纠正一个问题，别一口气说五条</div>
+          </div>
+          <div class="hint" style="margin-top:10px;">模板模式会在这里提示当前选的是诗词 / 经书 / 名家字帖。</div>
+        </section>
+
+        <section class="card span-2">
+          <h2>风格与素材</h2>
+          <div class="settings-grid">
+            <div class="grid-2">
+              <div class="settings-panel">
+                <label class="label" for="fontSelect">字体</label>
+                <select id="fontSelect"><option value="kai">楷体</option><option value="song">宋体</option><option value="hei">黑体</option></select>
+                <div class="muted" style="margin-top:8px;">只影响字帖示范字，不改页面正文。</div>
+              </div>
+              <div class="settings-panel">
+                <label class="label" for="themeSelect">背景</label>
+                <select id="themeSelect"><option value="traditional">中国风</option><option value="fresh">小清新</option><option value="cartoon">卡通</option></select>
+                <div class="muted" style="margin-top:8px;">每个主题都有自己的背景图案，不只是换颜色。</div>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="settings-panel">
+                <label class="label" for="sourceCategory">内容来源</label>
+                <select id="sourceCategory"><option value="custom">自定义练字</option><option value="poem">诗词</option><option value="classic">经书</option><option value="copybook">名家字帖</option></select>
+                <div class="muted" style="margin-top:8px;">选了模板后，会按逐字字帖来排版。</div>
+              </div>
+              <div class="settings-panel">
+                <label class="label" for="sourceItem">具体条目</label>
+                <select id="sourceItem"></select>
+                <div id="sourcePreview" class="source-preview"></div>
+              </div>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:12px;">
+            <button type="button" class="primary" id="loadSourceBtn">载入到今天练什么</button>
+          </div>
+          <div class="source-note">自定义内容按练字模式走；诗词、经书、名家字帖会自动切成逐字字帖模式。单文件 HTML 可以做，够用。</div>
+        </section>
+
+        <section class="card">
+          <h2>今天练完了吗？</h2>
+          <div class="inline-row">
+            <button type="button" class="success" id="doneBtn">✅ 已完成</button>
+            <button type="button" class="danger" id="skipBtn">❌ 今天没练</button>
+          </div>
+          <div style="margin-top:12px;">
+            <label class="label" for="bestChars">今天最满意的字</label>
+            <input id="bestChars" type="text" placeholder="例如：木、人">
+          </div>
+          <div style="margin-top:12px;">
+            <label class="label" for="parentNote">家长一句话记录</label>
+            <input id="parentNote" type="text" placeholder="例如：今天‘木’站稳了，但‘人’撇捺还散。">
+          </div>
+          <div style="margin-top:12px;">
+            <label class="label" for="nextFocus">明天继续盯的字</label>
+            <input id="nextFocus" type="text" placeholder="例如：真、写、学">
+          </div>
+          <div class="hint" style="margin-top:10px;">别只说“写得不好”，尽量说具体一点，孩子才知道到底哪里要改。</div>
+          <div class="reward-box">
+            <div><strong>今日小奖励</strong></div>
+            <div class="muted" id="rewardText">今天还没打卡。先写完，再领星星。</div>
+            <div class="stars" id="rewardStars">☆ ☆ ☆</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>最近训练记录</h2>
+          <div id="recordList" class="record-list"></div>
+        </section>
+
+        <section class="card span-2 mistake-card">
+          <h2>常错字小本本</h2>
+          <div class="muted">把最近总写不好的字记下来，下次可以一键重新生成专项练习页。</div>
+          <div style="margin-top:12px;">
+            <input id="mistakeInput" type="text" placeholder="例如：真 写 学 看 我">
+          </div>
+          <div class="btn-row" style="margin-top:12px;">
+            <button type="button" id="saveMistakeBtn">保存到常错字</button>
+            <button type="button" id="loadMistakeBtn">生成专项练习页</button>
+            <button type="button" id="clearMistakeBtn">清空常错字</button>
+          </div>
+          <div style="margin-top:10px;">
+            <button type="button" class="mini-btn" id="saveCurrentBtn">把当前练习字加入常错字</button>
+          </div>
+          <div class="hint" style="margin-top:10px;">别把所有字都塞进来，只放反复写飞的那几个。精准打击，比瞎练有用。</div>
+        </section>
+      </div>
+    </div>
+    <div class="footer-note">先写工整，不急着漂亮。</div>
+  </div>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'yimu-writing-helper-records';
+  const MISTAKE_KEY = 'yimu-writing-helper-mistakes';
+  const STYLE_KEYS = {
+    title: 'yimu-writing-helper-title',
+    theme: 'yimu-writing-helper-theme',
+    font: 'yimu-writing-helper-font',
+    sourceCategory: 'yimu-writing-helper-source-category',
+    sourceItem: 'yimu-writing-helper-source-item'
+  };
+  const FONT_OPTIONS = {
+    kai: '"Kaiti SC", "STKaiti", "KaiTi", serif',
+    song: '"Songti SC", "Songti", "SimSun", "STSong", serif',
+    hei: '"PingFang SC", "Heiti SC", "Microsoft YaHei", sans-serif'
+  };
+  const PRESET_BANKS = {
+    basic: ['一','二','三','十','口','日','木','人','大','上','下','中','小','土','田','山'],
+    structure: ['口','日','田','目','回','国','园','同','四','因','只','唱','品','图','问','间'],
+    commonMistakes: ['真','写','学','看','我','着','后','问','同','明','时','早','白','自','已','字'],
+    box: ['口','日','田','目','回','国','四','园','因','图','圆','问','同','品','间'],
+    leftRight: ['你','他','们','好','明','时','林','样','河','语','说','让','讲','动','做','听'],
+    single: ['人','大','小','山','木','水','火','禾','手','心','云','月','子','女','王','土'],
+    classUse: ['春','风','花','入','真','写','学','看','我','们','日','月','山','水','手','口']
+  };
+  const TRAINING_PLAN = [
+    { day: 1, chars: '一 二 三 十 口 日 木 人', focus: '先把横画写平，别急着求快。', tip: '从最简单的开始，先让孩子不怕写。' },
+    { day: 2, chars: '上 下 中 小 大 土 田 山', focus: '上下站稳，别飘。', tip: '先练最顺手的基础字，手感先起来。' },
+    { day: 3, chars: '人 大 天 太 个 子 女 了', focus: '撇捺打开一点，别缩成一团。', tip: '今天只盯“伸开”，别盯漂亮。' },
+    { day: 4, chars: '口 日 目 田 回 四 因 国', focus: '方框要立住，四边别塌。', tip: '方框字最适合练稳，先把框撑起来。' },
+    { day: 5, chars: '木 禾 本 末 米 林 果 术', focus: '竖要站中间，左右别挤。', tip: '结构简单的字，最适合练笔画位置。' },
+    { day: 6, chars: '山 出 川 门 间 问 用 只', focus: '中间留气口，别封死。', tip: '先练会看结构，不急着练难字。' },
+    { day: 7, chars: '心 手 水 火 云 风 月 白', focus: '点和竖钩别乱飞。', tip: '到这天再慢慢加一点变化。' },
+    { day: 8, chars: '明 时 早 星 光 今 午 里', focus: '左右别挤，重心站稳。', tip: '开始练生活里常见的字，孩子更有感觉。' },
+    { day: 9, chars: '你 我 他 们 好 叫 听 说', focus: '左右结构留空间，单人旁别发胖。', tip: '从常用字里找容易的，别上来就啃硬骨头。' },
+    { day: 10, chars: '春 风 花 入 学 写 看 真', focus: '上中下结构别压扁。', tip: '把课本里最常见的先写顺。' },
+    { day: 11, chars: '白 自 已 目 只 见 朋 友', focus: '相近字分清楚，别混。', tip: '今天重在辨认，不重在多。' },
+    { day: 12, chars: '日 月 星 光 明 晚 晴 晴', focus: '日字旁写瘦一点，右边让开。', tip: '简单偏旁反复练，最容易看出进步。' },
+    { day: 13, chars: '河 江 海 洗 清 油 泪 池', focus: '三点水别散，左边要收紧。', tip: '偏旁位置先写对，比写快重要。' },
+    { day: 14, chars: '说 话 语 读 认 识 让 请', focus: '言字旁别太宽，右边主体要清楚。', tip: '把常用交流字练顺，最实用。' },
+    { day: 15, chars: '听 唱 叫 响 哪 吗 口 名', focus: '口字旁写小一点，主字站住。', tip: '今天从最容易的口旁字开始。' },
+    { day: 16, chars: '好 妈 姐 妹 姓 娘 奶 如', focus: '女字旁收一点，右边别挤。', tip: '女字旁先写顺，孩子最容易接受。' },
+    { day: 17, chars: '国 回 园 因 团 图 圆 问', focus: '大方框先立住，里面别贴边。', tip: '包围结构慢慢来，别一口吃成胖子。' },
+    { day: 18, chars: '行 走 起 来 去 进 远 近', focus: '横竖撇捺要分开，别糊。', tip: '动作字孩子常见，练起来也有意思。' },
+    { day: 19, chars: '东 西 南 北 左 右 前 后', focus: '方向字别写乱，认字和写字一起练。', tip: '先把这组写顺，后面用得很频繁。' },
+    { day: 20, chars: '一 二 三 四 五 六 七 八', focus: '数字别飘，长短区别要写出来。', tip: '数字简单，正好拿来练稳定性。' },
+    { day: 21, chars: '上 下 左 右 中 内 外 边', focus: '位置字要稳，别挤成一团。', tip: '这组很好认，适合巩固基础。' },
+    { day: 22, chars: '木 书 本 字 文 读 写 画', focus: '中间收紧，笔画别散。', tip: '开始接近课堂和作业里的字。' },
+    { day: 23, chars: '开 关 门 闭 出 进 入 回', focus: '开合结构要清楚，别连成一坨。', tip: '今天专练“开”“关”这一类变化。' },
+    { day: 24, chars: '车 马 牛 羊 鸟 鱼 虫 鸡', focus: '笔画别缩，主笔要写出来。', tip: '动物字孩子一般愿意写，情绪也轻松。' },
+    { day: 25, chars: '春 夏 秋 冬 早 晚 晴 雨', focus: '部件别挤，左右和上下都要留空。', tip: '慢慢把季节和天气字练熟。' },
+    { day: 26, chars: '高 低 长 短 近 远 多 少', focus: '对比字写清楚，别全长一样。', tip: '这天可以顺便练一点理解。' },
+    { day: 27, chars: '爱 亲 家 爷 妈 爸 宝 贝', focus: '结构别乱，先稳再美。', tip: '常见家庭字，孩子也容易有画面。' },
+    { day: 28, chars: '校 书 课 练 习 题 纸 笔', focus: '课堂字要写端正，别潦草。', tip: '这组更贴近学校作业。' },
+    { day: 29, chars: '真 写 学 看 认 识 读 说', focus: '把最常错的字再打一轮。', tip: '回头复盘，才能把坑填平。' },
+    { day: 30, chars: '一 口 木 人 日 月 山 水', focus: '最后一天回到基础，把字写稳。', tip: '收尾别冲难度，回到最稳的那一层。' }
+  ];
+  const focusHints = ['字别出格，横别太斜','先把重心站稳，别左摇右晃','左右别挤一起，留点气口','今天只盯一个字形毛病，别贪多','先写清楚，再说漂亮'];
+  const parentHints = ['今天只纠正一个问题，别一口气说五条','先夸一个具体进步，再说要改哪里','写一页乱字，不如认真写四个字','孩子烦了就收，不要硬拖成对抗','先把结构站稳，别催速度'];
+
+  const SOURCE_LIBRARY = {
+    poem: [
+      { title: '《春晓》·孟浩然', text: '春眠不觉晓，处处闻啼鸟。夜来风雨声，花落知多少。' },
+      { title: '《静夜思》·李白', text: '床前明月光，疑是地上霜。举头望明月，低头思故乡。' },
+      { title: '《望庐山瀑布》·李白', text: '日照香炉生紫烟，遥看瀑布挂前川。飞流直下三千尺，疑是银河落九天。' },
+      { title: '《赠汪伦》·李白', text: '李白乘舟将欲行，忽闻岸上踏歌声。桃花潭水深千尺，不及汪伦送我情。' },
+      { title: '《早发白帝城》·李白', text: '朝辞白帝彩云间，千里江陵一日还。两岸猿声啼不住，轻舟已过万重山。' },
+      { title: '《黄鹤楼送孟浩然之广陵》·李白', text: '故人西辞黄鹤楼，烟花三月下扬州。孤帆远影碧空尽，唯见长江天际流。' },
+      { title: '《登鹳雀楼》·王之涣', text: '白日依山尽，黄河入海流。欲穷千里目，更上一层楼。' },
+      { title: '《凉州词》·王之涣', text: '黄河远上白云间，一片孤城万仞山。羌笛何须怨杨柳，春风不度玉门关。' },
+      { title: '《绝句》·杜甫', text: '两个黄鹂鸣翠柳，一行白鹭上青天。窗含西岭千秋雪，门泊东吴万里船。迟日江山丽，春风花草香。泥融飞燕子，沙暖睡鸳鸯。' },
+      { title: '《江雪》·柳宗元', text: '千山鸟飞绝，万径人踪灭。孤舟蓑笠翁，独钓寒江雪。' },
+      { title: '《悯农·其一》·李绅', text: '春种一粒粟，秋收万颗子。四海无闲田，农夫犹饿死。' },
+      { title: '《悯农·其二》·李绅', text: '锄禾日当午，汗滴禾下土。谁知盘中餐，粒粒皆辛苦。' },
+      { title: '《游子吟》·孟郊', text: '慈母手中线，游子身上衣。临行密密缝，意恐迟迟归。谁言寸草心，报得三春晖。' },
+      { title: '《鹿柴》·王维', text: '空山不见人，但闻人语响。返景入深林，复照青苔上。' },
+      { title: '《相思》·王维', text: '红豆生南国，春来发几枝。愿君多采撷，此物最相思。' },
+      { title: '《山居秋暝》·王维', text: '空山新雨后，天气晚来秋。明月松间照，清泉石上流。竹喧归浣女，莲动下渔舟。' },
+      { title: '《送元二使安西》·王维', text: '渭城朝雨浥轻尘，客舍青青柳色新。劝君更尽一杯酒，西出阳关无故人。' },
+      { title: '《山行》·杜牧', text: '远上寒山石径斜，白云生处有人家。停车坐爱枫林晚，霜叶红于二月花。' },
+      { title: '《清明》·杜牧', text: '清明时节雨纷纷，路上行人欲断魂。借问酒家何处有，牧童遥指杏花村。' },
+      { title: '《秋夕》·杜牧', text: '银烛秋光冷画屏，轻罗小扇扑流萤。天阶夜色凉如水，卧看牵牛织女星。' },
+      { title: '《枫桥夜泊》·张继', text: '月落乌啼霜满天，江枫渔火对愁眠。姑苏城外寒山寺，夜半钟声到客船。' },
+      { title: '《咏鹅》·骆宾王', text: '鹅鹅鹅，曲项向天歌。白毛浮绿水，红掌拨清波。' },
+      { title: '《夜宿山寺》·李白', text: '危楼高百尺，手可摘星辰。不敢高声语，恐惊天上人。' },
+      { title: '《望天门山》·李白', text: '天门中断楚江开，碧水东流至此回。两岸青山相对出，孤帆一片日边来。' },
+      { title: '《九月九日忆山东兄弟》·王维', text: '独在异乡为异客，每逢佳节倍思亲。遥知兄弟登高处，遍插茱萸少一人。' },
+      { title: '《别董大》·高适', text: '千里黄云白日曛，北风吹雁雪纷纷。莫愁前路无知己，天下谁人不识君。' },
+      { title: '《江南》·汉乐府', text: '江南可采莲，莲叶何田田。鱼戏莲叶间，鱼戏莲叶东，鱼戏莲叶西，鱼戏莲叶南，鱼戏莲叶北。' },
+      { title: '《春夜喜雨》·杜甫', text: '好雨知时节，当春乃发生。随风潜入夜，润物细无声。' },
+      { title: '《竹里馆》·王维', text: '独坐幽篁里，弹琴复长啸。深林人不知，明月来相照。' }
+    ],
+    classic: [
+      { title: '《论语·学而》', text: '子曰：学而时习之，不亦说乎？有朋自远方来，不亦乐乎？人不知而不愠，不亦君子乎？有子曰：其为人也孝弟，而好犯上者，鲜矣；不好犯上，而好作乱者，未之有也。君子务本，本立而道生。孝弟也者，其为仁之本与！子曰：巧言令色，鲜矣仁！曾子曰：吾日三省吾身：为人谋而不忠乎？与朋友交而不信乎？传不习乎？子曰：道千乘之国，敬事而信，节用而爱人，使民以时。子曰：弟子入则孝，出则弟，谨而信，泛爱众，而亲仁。行有余力，则以学文。子夏曰：贤贤易色；事父母，能竭其力；事君，能致其身；与朋友交，言而有信。虽曰未学，吾必谓之学矣。子曰：君子不重则不威，学则不固。主忠信，无友不如己者，过则勿惮改。曾子曰：慎终追远，民德归厚矣。' },
+      { title: '《论语·为政》', text: '子曰：为政以德，譬如北辰，居其所而众星共之。子曰：诗三百，一言以蔽之，曰：思无邪。子曰：道之以政，齐之以刑，民免而无耻；道之以德，齐之以礼，有耻且格。子曰：吾十有五而志于学，三十而立，四十而不惑，五十而知天命，六十而耳顺，七十而从心所欲，不逾矩。孟懿子问孝。子曰：无违。樊迟御，子告之曰：孟孙问孝于我，我对曰无违。樊迟曰：何谓也？子曰：生，事之以礼；死，葬之以礼，祭之以礼。孟武伯问孝。子曰：父母唯其疾之忧。子游问孝。子曰：今之孝者，是谓能养。至于犬马，皆能有养。不敬，何以别乎？子夏问孝。子曰：色难。有事，弟子服其劳；有酒食，先生馔，曾是以为孝乎？子曰：吾与回言终日，不违如愚。退而省其私，亦足以发，回也不愚。子曰：视其所以，观其所由，察其所安。人焉廋哉？人焉廋哉？子曰：温故而知新，可以为师矣。子曰：君子不器。子贡问君子。子曰：先行其言而后从之。子曰：君子周而不比，小人比而不周。子曰：学而不思则罔，思而不学则殆。子曰：攻乎异端，斯害也已。子曰：由，诲女知之乎！知之为知之，不知为不知，是知也。' },
+      { title: '《大学》', text: '大学之道，在明明德，在亲民，在止于至善。知止而后有定，定而后能静，静而后能安，安而后能虑，虑而后能得。物有本末，事有终始。知所先后，则近道矣。古之欲明明德于天下者，先治其国。欲治其国者，先齐其家。欲齐其家者，先修其身。欲修其身者，先正其心。欲正其心者，先诚其意。欲诚其意者，先致其知。致知在格物。物格而后知至，知至而后意诚，意诚而后心正，心正而后身修，身修而后家齐，家齐而后国治，国治而后天下平。自天子以至于庶人，壹是皆以修身为本。其本乱而末治者否矣。其所厚者薄，而其所薄者厚，未之有也。' },
+      { title: '《中庸》', text: '天命之谓性，率性之谓道，修道之谓教。道也者，不可须臾离也，可离非道也。是故君子戒慎乎其所不睹，恐惧乎其所不闻。莫见乎隐，莫显乎微，故君子慎其独也。喜怒哀乐之未发，谓之中；发而皆中节，谓之和。中也者，天下之大本也；和也者，天下之达道也。致中和，天地位焉，万物育焉。仲尼曰：君子中庸，小人反中庸。君子之中庸也，君子而时中；小人之反中庸也，小人而无忌惮也。子曰：中庸其至矣乎！民鲜能久矣。子曰：道之不行也，我知之矣：知者过之，愚者不及也。道之不明也，我知之矣：贤者过之，不肖者不及也。人莫不饮食也，鲜能知味也。' },
+      { title: '《孟子·告子上》', text: '孟子曰：鱼，我所欲也；熊掌，亦我所欲也。二者不可得兼，舍鱼而取熊掌者也。生，亦我所欲也；义，亦我所欲也。二者不可得兼，舍生而取义者也。生亦我所欲，所欲有甚于生者，故不为苟得也。死亦我所恶，所恶有甚于死者，故患有所不辟也。如使人之所欲莫甚于生，则凡可以得生者，何不用也？使人之所恶莫甚于死者，则凡可以辟患者，何不为也？由是则生而有不用也，由是则可以辟患而有不为也。是故所欲有甚于生者，所恶有甚于死者。非独贤者有是心也，人皆有之，贤者能勿丧耳。一箪食，一豆羹，得之则生，弗得则死。呼尔而与之，行道之人弗受；蹴尔而与之，乞人不屑也。万钟则不辩礼义而受之，万钟于我何加焉？' },
+      { title: '《道德经》第八章', text: '上善若水，水善利万物而不争，处众人之所恶，故几于道。居善地，心善渊，与善仁，言善信，政善治，事善能。' },
+      { title: '《诫子书》·诸葛亮', text: '夫君子之行，静以修身，俭以养德。非淡泊无以明志，非宁静无以致远。夫学须静也，才须学也，非学无以广才，非志无以成学。' },
+      { title: '《三字经》', text: "人之初，性本善。性相近，习相远。苟不教，性乃迁。教之道，贵以专。昔孟母，择邻处。子不学，断机杼。窦燕山，有义方。教五子，名俱扬。养不教，父之过。教不严，师之惰。子不学，非所宜。幼不学，老何为。玉不琢，不成器。人不学，不知义。为人子，方少时。亲师友，习礼仪。香九龄，能温席。孝于亲，所当执。融四岁，能让梨。弟于长，宜先知。首孝悌，次见闻。知某数，识某文。一而十，十而百。百而千，千而万。三才者，天地人。三光者，日月星。三纲者，君臣义。父子亲，夫妇顺。曰春夏，曰秋冬。此四时，运不穷。曰南北，曰西东。此四方，应乎中。曰水火，木金土。此五行，本乎数。十干者，甲至癸。十二支，子至亥。曰黄道，日所躔。曰赤道，当中权。赤道下，温暖极。我中华，在东北。寒燠均，霜露改。右高原，左大海。曰江河，曰淮济。此四渎，水之纪。曰岱华，嵩恒衡。此五岳，山之名。古九州，今改制。称行省，三十五。曰士农，曰工商。此四民，国之良。曰仁义，礼智信。此五常，不容紊。地所生，有草木。此植物，遍水陆。有虫鱼，有鸟兽。此动物，能飞走。稻粱菽，麦黍稷。此六谷，人所食。马牛羊，鸡犬豕。此六畜，人所饲。曰喜怒，曰哀惧。爱恶欲，七情具。匏土革，木石金。丝与竹，乃八音。高曾祖，父而身。身而子，子而孙。自子孙，至玄曾。乃九族，人之伦。父子恩，夫妇从。兄则友，弟则恭。长幼序，友与朋。君则敬，臣则忠。此十义，人所同。凡训蒙，须讲究。详训诂，明句读。为学者，必有初。小学终，至四书。论语者，二十篇。群弟子，记善言。孟子者，七篇止。讲道德，说仁义。作中庸，子思笔。中不偏，庸不易。作大学，乃曾子。自修齐，至平治。孝经通，四书熟。如六经，始可读。诗书易，礼春秋。号六经，当讲求。有连山，有归藏。有周易，三易详。有典谟，有训诰。有誓命，书之奥。我周公，作周礼。著六官，存治体。大小戴，注礼记。述圣言，礼乐备。曰国风，曰雅颂。号四诗，当讽咏。诗既亡，春秋作。寓褒贬，别善恶。三传者，有公羊。有左氏，有谷梁。经既明，方读子。撮其要，记其事。五子者，有荀扬。文中子，及老庄。经子通，读诸史。考世系，知终始。自羲农，至黄帝。号三皇，居上世。唐有虞，号二帝。相揖逊，称盛世。夏有禹，商有汤。周文武，称三王。夏传子，家天下。四百载，迁夏社。汤伐夏，国号商。六百载，至纣亡。周武王，始诛纣。八百载，最长久。周辙东，王纲坠。逞干戈，尚游说。始春秋，终战国。五霸强，七雄出。嬴秦氏，始兼并。传二世，楚汉争。高祖兴，汉业建。至孝平，王莽篡。光武兴，为东汉。四百年，终于献。蜀魏吴，争汉鼎。号三国，迄两晋。宋齐继，梁陈承。为南朝，都金陵。北元魏，分东西。宇文周，与高齐。迨至隋，一土宇。不再传，失统绪。唐高祖，起义师。除隋乱，创国基。二十传，三百载。梁灭之，国乃改。梁唐晋，及汉周。称五代，皆有由。炎宋兴，受周禅。十八传，南北混。辽与金，帝号纷。迨灭辽，宋犹存。至元兴，金绪歇。有宋世，一同灭。并中国，兼戎翟。明太祖，久亲师。传建文，方四祀。迁北京，永乐嗣。迨崇祯，煤山逝。清太祖，膺景命。靖四方，克大定。至世祖，乃大同。十二世，清祚终。读史者，考实录。通古今，若亲目。口而诵，心而惟。朝于斯，夕于斯。昔仲尼，师项橐。古圣贤，尚勤学。赵中令，读鲁论。彼既仕，学且勤。披蒲编，削竹简。彼无书，且知勉。头悬梁，锥刺股。彼不教，自勤苦。如囊萤，如映雪。家虽贫，学不辍。如负薪，如挂角。身虽劳，犹苦卓。苏老泉，二十七。始发奋，读书籍。彼既老，犹悔迟。尔小生，宜早思。若梁灏，八十二。对大廷，魁多士。彼既成，众称异。尔小生，宜立志。莹八岁，能咏诗。泌七岁，能赋棋。彼颖悟，人称奇。尔幼学，当效之。蔡文姬，能辨琴。谢道韫，能咏吟。彼女子，且聪敏。尔男子，当自警。唐刘晏，方七岁。举神童，作正字。彼虽幼，身已仕。尔幼学，勉而致。有为者，亦若是。犬守夜，鸡司晨。苟不学，曷为人。蚕吐丝，蜂酿蜜。人不学，不如物。幼而学，壮而行。上致君，下泽民。扬名声，显父母。光于前，裕于后。人遗子，金满籝。我教子，惟一经。勤有功，戏无益。戒之哉，宜勉力。" },{ title: '《千字文》', text: "天地玄黄，宇宙洪荒。日月盈昃，辰宿列张。寒来暑往，秋收冬藏。闰余成岁，律吕调阳。云腾致雨，露结为霜。金生丽水，玉出昆冈。剑号巨阙，珠称夜光。果珍李柰，菜重芥姜。海咸河淡，鳞潜羽翔。龙师火帝，鸟官人皇。始制文字，乃服衣裳。推位让国，有虞陶唐。吊民伐罪，周发殷汤。坐朝问道，垂拱平章。爱育黎首，臣伏戎羌。遐迩一体，率宾归王。鸣凤在竹，白驹食场。化被草木，赖及万方。盖此身发，四大五常。恭惟鞠养，岂敢毁伤。女慕贞洁，男效才良。知过必改，得能莫忘。罔谈彼短，靡恃己长。信使可覆，器欲难量。墨悲丝染，诗赞羔羊。景行维贤，克念作圣。德建名立，形端表正。空谷传声，虚堂习听。祸因恶积，福缘善庆。尺璧非宝，寸阴是竞。资父事君，曰严与敬。孝当竭力，忠则尽命。临深履薄，夙兴温凊。似兰斯馨，如松之盛。川流不息，渊澄取映。容止若思，言辞安定。笃初诚美，慎终宜令。荣业所基，籍甚无竟。学优登仕，摄职从政。存以甘棠，去而益咏。乐殊贵贱，礼别尊卑。上和下睦，夫唱妇随。外受傅训，入奉母仪。诸姑伯叔，犹子比儿。孔怀兄弟，同气连枝。交友投分，切磨箴规。仁慈隐恻，造次弗离。节义廉退，颠沛匪亏。性静情逸，心动神疲。守真志满，逐物意移。坚持雅操，好爵自縻。都邑华夏，东西二京。背邙面洛，浮渭据泾。宫殿盘郁，楼观飞惊。图写禽兽，画彩仙灵。丙舍旁启，甲帐对楹。肆筵设席，鼓瑟吹笙。升阶纳陛，弁转疑星。右通广内，左达承明。既集坟典，亦聚群英。杜稿钟隶，漆书壁经。府罗将相，路侠槐卿。户封八县，家给千兵。高冠陪辇，驱毂振缨。世禄侈富，车驾肥轻。策功茂实，勒碑刻铭。磻溪伊尹，佐时阿衡。奄宅曲阜，微旦孰营。桓公匡合，济弱扶倾。绮回汉惠，说感武丁。俊乂密勿，多士寔宁。晋楚更霸，赵魏困横。假途灭虢，践土会盟。何遵约法，韩弊烦刑。起翦颇牧，用军最精。宣威沙漠，驰誉丹青。九州禹迹，百郡秦并。岳宗泰岱，禅主云亭。雁门紫塞，鸡田赤城。昆池碣石，钜野洞庭。旷远绵邈，岩岫杳冥。治本于农，务兹稼穑。俶载南亩，我艺黍稷。税熟贡新，劝赏黜陟。孟轲敦素，史鱼秉直。庶几中庸，劳谦谨敕。聆音察理，鉴貌辨色。贻厥嘉猷，勉其祗植。省躬讥诫，宠增抗极。殆辱近耻，林皋幸即。两疏见机，解组谁逼。索居闲处，沉默寂寥。求古寻论，散虑逍遥。欣奏累遣，戚谢欢招。渠荷的历，园莽抽条。枇杷晚翠，梧桐早凋。陈根委翳，落叶飘飖。游鹍独运，凌摩绛霄。耽读玩市，寓目囊箱。易輶攸畏，属耳垣墙。具膳餐饭，适口充肠。饱饫烹宰，饥厌糟糠。亲戚故旧，老少异粮。妾御绩纺，侍巾帷房。纨扇圆洁，银烛炜煌。昼眠夕寐，蓝笋象床。弦歌酒宴，接杯举觞。矫手顿足，悦豫且康。嫡后嗣续，祭祀烝尝。稽颡再拜，悚惧恐惶。笺牒简要，顾答审详。骸垢想浴，执热愿凉。驴骡犊特，骇跃超骧。诛斩贼盗，捕获叛亡。布射僚丸，嵇琴阮啸。恬笔伦纸，钧巧任钓。释纷利俗，竝皆佳妙。毛施淑姿，工颦妍笑。年矢每催，曦晖朗曜。璇玑悬斡，晦魄环照。指薪修祜，永绥吉劭。矩步引领，俯仰廊庙。束带矜庄，徘徊瞻眺。孤陋寡闻，愚蒙等诮。谓语助者，焉哉乎也。" },{ title: '《弟子规》', text: "弟子规，圣人训。首孝悌，次谨信。泛爱众，而亲仁。有余力，则学文。父母呼，应勿缓。父母命，行勿懒。父母教，须敬听。父母责，须顺承。冬则温，夏则凊。晨则省，昏则定。出必告，反必面。居有常，业无变。事虽小，勿擅为。苟擅为，子道亏。物虽小，勿私藏。苟私藏，亲心伤。亲所好，力为具。亲所恶，谨为去。身有伤，贻亲忧。德有伤，贻亲羞。亲爱我，孝何难。亲憎我，孝方贤。亲有过，谏使更。怡吾色，柔吾声。谏不入，悦复谏。号泣随，挞无怨。亲有疾，药先尝。昼夜侍，不离床。丧三年，常悲咽。居处变，酒肉绝。丧尽礼，祭尽诚。事死者，如事生。兄道友，弟道恭。兄弟睦，孝在中。财物轻，怨何生。言语忍，忿自泯。或饮食，或坐走。长者先，幼者后。长呼人，即代叫。人不在，己即到。称尊长，勿呼名。对尊长，勿见能。路遇长，疾趋揖。长无言，退恭立。骑下马，乘下车。过犹待，百步余。长者立，幼勿坐。长者坐，命乃坐。尊长前，声要低。低不闻，却非宜。进必趋，退必迟。问起对，视勿移。事诸父，如事父。事诸兄，如事兄。朝起早，夜眠迟。老易至，惜此时。晨必盥，兼漱口。便溺回，辄净手。冠必正，纽必结。袜与履，俱紧切。置冠服，有定位。勿乱顿，致污秽。衣贵洁，不贵华。上循分，下称家。对饮食，勿拣择。食适可，勿过则。年方少，勿饮酒。饮酒醉，最为丑。步从容，立端正。揖深圆，拜恭敬。勿践阈，勿跛倚。勿箕踞，勿摇髀。缓揭帘，勿有声。宽转弯，勿触棱。执虚器，如执盈。入虚室，如有人。事勿忙，忙多错。勿畏难，勿轻略。斗闹场，绝勿近。邪僻事，绝勿问。将入门，问孰存。将上堂，声必扬。人问谁，对以名。吾与我，不分明。用人物，须明求。倘不问，即为偷。借人物，及时还。后有急，借不难。凡出言，信为先。诈与妄，奚可焉。话说多，不如少。惟其是，勿佞巧。奸巧语，秽污词。市井气，切戒之。见未真，勿轻言。知未的，勿轻传。事非宜，勿轻诺。苟轻诺，进退错。凡道字，重且舒。勿急疾，勿模糊。彼说长，此说短。不关己，莫闲管。见人善，即思齐。纵去远，以渐跻。见人恶，即内省。有则改，无加警。唯德学，唯才艺。不如人，当自砺。若衣服，若饮食。不如人，勿生戚。闻过怒，闻誉乐。损友来，益友却。闻誉恐，闻过欣。直谅土，渐相亲。无心非，名为错。有心非，名为恶。过能改，归于无。倘掩饰，增一辜。凡是人，皆须爱。天同覆，地同载。行高者，名自高。人所重，非貌高。才大者，望自大。人所服，非言大。己有能，勿自私。人所能，勿轻訾。勿谄富，勿骄贫。勿厌故，勿喜新。人不闲，勿事搅。人不安，勿话扰。人有短，切莫揭。人有私，切莫说。道人善，即是善。人知之，愈思勉。扬人恶，即是恶。疾之甚，祸且作。善相劝，德皆建。过不规，道两亏。凡取与，贵分晓。与宜多，取宜少。将加人，先问己。己不欲，即速已。恩欲报，怨欲忘。报怨短，报恩长。待婢仆，身贵端。虽贵端，慈而宽。势服人，心不然。理服人，方无言。同是人，类不齐。流俗众，仁者希。果仁者，人多畏。言不讳，色不媚。能亲仁，无限好。德日进，过日少。不亲仁，无限害。小人进，百事坏。不力行，但学文。长浮华，成何人。但力行，不学文。任己见，昧理真。读书法，有三到。心眼口，信皆要。方读此，勿慕彼。此未终，彼勿起。宽为限，紧用功。工夫到，滞塞通。心有疑，随札记。就人问，求确义。房室清，墙壁净。几案洁，笔砚正。墨磨偏，心不端。字不敬，心先病。列典籍，有定处。读看毕，还原所。虽有急，卷束齐。有缺坏，就补之。非圣书，屏勿视。蔽聪明，坏心志。勿自暴，勿自弃。圣与贤，可驯致。" },{ title: '王羲之·兰亭序', text: '永和九年，岁在癸丑，暮春之初，会于会稽山阴之兰亭，修禊事也。群贤毕至，少长咸集。此地有崇山峻岭，茂林修竹，又有清流激湍，映带左右，引以为流觞曲水，列坐其次。虽无丝竹管弦之盛，一觞一咏，亦足以畅叙幽情。是日也，天朗气清，惠风和畅。仰观宇宙之大，俯察品类之盛，所以游目骋怀，足以极视听之娱，信可乐也。夫人之相与，俯仰一世。或取诸怀抱，悟言一室之内；或因寄所托，放浪形骸之外。虽趣舍万殊，静躁不同，当其欣于所遇，暂得于己，快然自足，不知老之将至。及其所之既倦，情随事迁，感慨系之矣。向之所欣，俯仰之间，已为陈迹，犹不能不以之兴怀。况修短随化，终期于尽。古人云：死生亦大矣。岂不痛哉！每览昔人兴感之由，若合一契，未尝不临文嗟悼，不能喻之于怀。固知一死生为虚诞，齐彭殇为妄作。后之视今，亦犹今之视昔。悲夫！故列叙时人，录其所述。虽世殊事异，所以兴怀，其致一也。后之览者，亦将有感于斯文。' },
+      { title: '苏轼·黄州寒食诗帖', text: '自我来黄州，已过三寒食。年年欲惜春，春去不容惜。今年又苦雨，两月秋萧瑟。卧闻海棠花，泥污燕支雪。暗中偷负去，夜半真有力。何殊病少年，病起头已白。春江欲入户，雨势来不已。小屋如渔舟，蒙蒙水云里。空庖煮寒菜，破灶烧湿苇。那知是寒食，但见乌衔纸。君门深九重，坟墓在万里。也拟哭途穷，死灰吹不起。' },
+      { title: '苏轼·前赤壁赋', text: '壬戌之秋，七月既望，苏子与客泛舟游于赤壁之下。清风徐来，水波不兴。举酒属客，诵明月之诗，歌窈窕之章。少焉，月出于东山之上，徘徊于斗牛之间。白露横江，水光接天。纵一苇之所如，凌万顷之茫然。浩浩乎如冯虚御风，而不知其所止；飘飘乎如遗世独立，羽化而登仙。于是饮酒乐甚，扣舷而歌之。歌曰：桂棹兮兰桨，击空明兮溯流光。渺渺兮予怀，望美人兮天一方。客有吹洞箫者，倚歌而和之。其声呜呜然，如怨如慕，如泣如诉，余音袅袅，不绝如缕。舞幽壑之潜蛟，泣孤舟之嫠妇。苏子愀然，正襟危坐而问客曰：何为其然也？客曰：月明星稀，乌鹊南飞，此非曹孟德之诗乎？西望夏口，东望武昌，山川相缪，郁乎苍苍，此非孟德之困于周郎者乎？方其破荆州，下江陵，顺流而东也，舳舻千里，旌旗蔽空，酾酒临江，横槊赋诗，固一世之雄也，而今安在哉？况吾与子渔樵于江渚之上，侣鱼虾而友麋鹿，驾一叶之扁舟，举匏樽以相属。寄蜉蝣于天地，渺沧海之一粟。哀吾生之须臾，羡长江之无穷。挟飞仙以遨游，抱明月而长终。知不可乎骤得，托遗响于悲风。苏子曰：客亦知夫水与月乎？逝者如斯，而未尝往也；盈虚者如彼，而卒莫消长也。盖将自其变者而观之，则天地曾不能以一瞬；自其不变者而观之，则物与我皆无尽也，而又何羡乎！且夫天地之间，物各有主，苟非吾之所有，虽一毫而莫取。惟江上之清风，与山间之明月，耳得之而为声，目遇之而成色，取之无禁，用之不竭。是造物者之无尽藏也，而吾与子之所共适。客喜而笑，洗盏更酌。肴核既尽，杯盘狼藉。相与枕藉乎舟中，不知东方之既白。' },
+      { title: '苏轼·后赤壁赋', text: '是岁十月之望，步自雪堂，将归于临皋。二客从予过黄泥之坂。霜露既降，木叶尽脱，人影在地，仰见明月，顾而乐之，行歌相答。已而叹曰：有客无酒，有酒无肴，月白风清，如此良夜何！客曰：今者薄暮，举网得鱼，巨口细鳞，状如松江之鲈。顾安所得酒乎？归而谋诸妇。妇曰：我有斗酒，藏之久矣，以待子不时之需。于是携酒与鱼，复游于赤壁之下。江流有声，断岸千尺，山高月小，水落石出。曾日月之几何，而江山不可复识矣。予乃摄衣而上，履巉岩，披蒙茸，踞虎豹，登虬龙，攀栖鹘之危巢，俯冯夷之幽宫。盖二客不能从焉。划然长啸，草木震动，山鸣谷应，风起水涌。予亦悄然而悲，肃然而恐，凛乎其不可留也。反而登舟，放乎中流，听其所止而休焉。时夜将半，四顾寂寥。适有孤鹤，横江东来。翅如车轮，玄裳缟衣，戛然长鸣，掠予舟而西也。须臾客去，予亦就睡。梦一道士，羽衣蹁跹，过临皋之下，揖予而言曰：赤壁之游乐乎？问其姓名，俯而不答。呜呼！噫嘻！我知之矣。畴昔之夜，飞鸣而过我者，非子也邪？道士顾笑，予亦惊寤。开户视之，不见其处。' },
+      { title: '颜真卿·祭侄文稿', text: '维乾元元年岁次戊戌九月庚午朔三日壬申，〈从父〉第十三叔、银青光禄〈脱「大」字〉夫、使持节蒲州诸军事、蒲州刺史、上轻车都尉、丹阳县开国侯真卿，以清酌庶羞，祭于亡侄赠赞善大夫季明之灵曰：惟尔挺生，夙标幼德，宗庙瑚琏，阶庭兰玉。〈方凭积善〉每慰人心，方期戬谷。何图逆贼闲衅，称兵犯顺。尔父〈□制，被胁〉竭诚，常山作郡。余时受命，亦在平原。仁兄爱我，〈恐〉俾尔传言。尔既归止，爰开土门。土门既开，凶威大蹙。〈贼臣拥众不救〉贼臣〈拥〉不救，孤城围逼。父〈擒〉陷子死，巢倾卵覆。天不悔祸，谁为荼毒。念尔遘残，百身何赎？呜呼哀哉！吾承天泽，移牧〈河东近〉河关。〈尔之〉泉明比者，再陷常山。〈提〉携尔首櫬，〈亦自常山〉及兹同还。抚念摧切，震悼心颜。方俟〈□□〉远日，〈□〉卜尔幽宅。〈抚〉魂而有知，无嗟久客。呜呼哀哉！尚飨！' },
+      { title: '颜真卿·颜勤礼碑', text: "唐故秘书省著作郎夔州都督府长史上护军颜公神道碑。曾孙鲁郡开国公真卿撰并书。公讳勤礼，字敬，琅琊临沂人。高祖讳见远，齐御史中丞。曾祖讳协，梁湘东王记室参军。祖讳之推，北齐黄门侍郎。父讳思鲁，隋东宫学士。公幼而朗悟，识量宏远。工于篆籀，尤精训诂。解褐校书郎，与两兄师古、相时同时为宏文馆学士。后为秘书省著作郎，修国史。迁夔州都督府长史，加上护军。公之德行才华，昭昭在人耳目。" },
+      { title: '颜真卿·多宝塔碑', text: "大唐西京千福寺多宝佛塔感应碑文。南阳岑勋撰。朝议郎判尚书武部员外郎琅琊颜真卿书。朝散大夫检校尚书都官郎中东海徐浩题额。粤妙法莲华，诸佛之秘藏也。多宝佛塔，证经之踊现也。发明资乎十力，弘建在于四依。有禅师法号楚金，姓程，广平人也。祖、父并信著释门，庆归法胤。母高氏，久而无妊，夜梦诸佛，觉而有娠。是生龙象之征，无取熊罴之兆。诞弥厥月，炳然殊相。" },
+      { title: '柳公权·玄秘塔碑', text: "唐故左街僧录内供奉三教谈论引驾大德安国寺上座赐紫大达法师玄秘塔碑铭并序。江南西道都团练观察处置等使朝散大夫兼御史中丞上柱国赐紫金鱼袋裴休撰。正议大夫守右散骑常侍充集贤殿学士兼判院事上柱国赐紫金鱼袋柳公权书并篆额。玄秘塔者，大法师端甫灵骨之所归也。于戏！为丈夫者，在家则张仁义礼乐，辅天子以扶世导俗；出家则运慈悲定慧，佐如来以阐教利生。舍此无以为丈夫也。背此无以为达道也。和尚，其出家之雄乎！" },
+      { title: '欧阳询·九成宫醴泉铭', text: "秘书监检校侍中钜鹿郡公臣魏徵奉敕撰。维贞观六年孟夏之月，皇帝避暑乎九成之宫，此则隋之仁寿宫也。冠山抗殿，绝壑为池，跨水架楹，分岩竦阙。高阁周建，长廊四起。栋宇胶葛，台榭参差。仰视则迢递百寻，下临则峥嵘千仞。珠璧交映，金碧相晖，照灼云霞，蔽亏日月。观其移山回涧，穷泰极侈，以人从欲，良足深尤。至于炎景流金，无郁蒸之气；微风徐动，有凄清之凉。信安体之佳所，诚养神之胜地。汉之甘泉，不能尚也。" },
+      { title: '褚遂良·雁塔圣教序', text: "盖闻二仪有象，显覆载以含生；四时无形，潜寒暑以化物。是以窥天鉴地，庸愚皆识其端；明阴洞阳，贤哲罕穷其数。然而天地苞乎阴阳而易识者，以其有象也；阴阳处乎天地而难穷者，以其无形也。故知象显可征，虽愚不惑；形潜莫睹，在智犹迷。况乎佛道崇虚，乘幽控寂，弘济万品，典御十方。举威灵而无上，抑神力而无下。大之则弥于宇宙，细之则摄于毫厘。无灭无生，历千劫而不古；若隐若显，运百福而长今。" },
+      { title: '褚遂良·阴符经', text: "观天之道，执天之行，尽矣。天有五贼，见之者昌。五贼在心，施行于天。宇宙在乎手，万化生乎身。天性，人也。人心，机也。立天之道，以定人也。天发杀机，移星易宿。地发杀机，龙蛇起陆。人发杀机，天地反覆。天人合发，万化定基。性有巧拙，可以伏藏。九窍之邪，在乎三要，可以动静。火生于木，祸发必克。奸生于国，时动必溃。知之修之，谓之圣人。" },
+      { title: '黄庭坚·松风阁诗帖', text: "依山筑阁见平川，夜阑箕斗插屋椽。我来名之意适然。老松魁梧数百年，斧斤所赦今参天。风鸣娲皇五十弦，洗耳不须菩萨泉。嘉二三子甚好贤，力贫买酒醉此筵。夜雨鸣廊到晓悬，相看不归卧僧毡。泉枯石燥复潺湲，山川光辉为我妍。野僧旱饥不能饘，晓见寒溪有炊烟。东坡道人已沉泉，张侯何时到眼前。钓台惊涛可昼眠，怡亭看篆蛟龙缠。安得此身脱拘挛，舟载诸友长周旋。" },
+      { title: '米芾·蜀素帖', text: "拟古。青松劲挺姿，凌霄耻屈盘。种种出枝叶，牵连上松端。秋花起绛烟，旖旎云锦殷。不羞不自立，舒光射丸丸。柏见吐子效，鹤疑缩颈还。青松本无华，安得保岁寒。龟鹤年寿齐，羽介所托殊。种种是灵物，相得忘形躯。鹤有冲霄心，龟厌曳尾居。以竹两附口，相将上云衢。报汝慎勿语，一语堕泥涂。吴江垂虹亭作。断云一片洞庭帆，玉破鲈鱼霜破柑。好作新诗继桑苧，垂虹秋色满东南。" },
+      { title: '怀素·自叙帖', text: "怀素家长沙，幼而事佛，经禅之暇，颇好笔翰。然恨未能远睹前人之奇迹，所见甚浅。遂担笈杖锡，西游上国，谒见当代名公。错综其事。遗编绝简，往往遇之。豁然心胸，略无疑滞，鱼笺绢素，多所尘点，士大夫不以为怪焉。颜刑部，书家者流，精极笔法，水镜之辩，许在末行。又以尚书司勋郎卢象，小宗伯张正言，曾为歌诗，故叙之曰：开士怀素，僧中之英，气概通疎，性灵豁畅。精心草圣，积有岁时，江岭之间，其名大著。故吏部侍郎韦公陟，睹其笔力，勖以有成。今礼部侍郎张公谓，赏其不羁，引以游处。兼好事者同作歌以赞之，动盈卷轴。夫草稿之作，起于汉代。杜度、崔瑗，始以妙闻。迨乎伯英，尤擅其美。羲献兹降，虞陆相承。口诀手授，以至于吴郡张旭长史。虽姿性颠逸，超绝古今，而模楷精法详，特为真正。" },
+      { title: '赵孟頫·胆巴碑', text: "大元敕赐龙兴寺大觉普慈广照无上帝师之碑。集贤学士资德大夫臣赵孟頫奉敕撰并书篆。皇帝即位之元年，有诏：金刚上师胆巴，赐谥大觉普慈广照无上帝师，敕臣孟頫为文并书，刻石大都寺。五年，真定路龙兴寺僧迭凡八奏。师本住其寺，乞刻石寺中。复敕臣孟頫为文并书。臣孟頫预议，赐谥大觉以言乎师之体，普慈以言乎师之用，广照以言慧光之所照临，无上以言为帝者师。既奏，有旨：于义甚当。谨按：师所生之地曰突甘斯旦麻，童子出家，事圣师绰理哲哇为弟子，受名胆巴。梵言胆巴，华言微妙。" },
+      { title: '钟繇·宣示表', text: "尚书宣示孙权所求，诏令所报，所以博示。逮于卿佐，必冀良方出于阿是。刍荛之言可择廊庙，况繇始以疏贱，得为前恩。横所盱睨，公私见异，爱同骨肉，殊遇厚宠，以至今日。再世荣名，同国休戚，敢不自量。窃致愚虑，仍日达晨，坐以待旦，退思鄙浅，圣意所弃，则又割意，不敢献闻。深念天下，今为已平，权之委质，外震神武。度其拳拳，无有二计。高尚自疏，况未见信。今推款诚，欲求见信，实怀不自信之心，亦宜待之以信，而当护其未自信也。" },
+      { title: '王献之·中秋帖', text: '中秋不复，如何？仰惟。' },
+      { title: '王羲之·快雪时晴帖', text: '快雪时晴，佳想安善。未复有侍中消息，何如？' },
+      { title: '董其昌·画禅室随笔', text: "米海岳书，无垂不缩，无往不收。此八字真言，无等之咒也。然须结字得势，海岳自谓集古字，盖于结字最留意。比其晚年，始自出新意耳。作书所最忌者，位置等匀。且如一字中，须有收有放，有精神相挽处。王大令之书，从无左右并头者。右军如凤翥鸾翔，似奇反正。此皆言布置不当平匀，当长短错综，疏密相间也。作书之法，在能放纵，又能攒捉。每一字中，失此两窍，便如昼夜独行，全是魔道矣。" }
+    ]
+  };
+
+
+  const el = id => document.getElementById(id);
+  const pageTitle = el('pageTitle');
+  const editTitleBtn = el('editTitleBtn');
+  const charsInput = el('charsInput');
+  const gridType = el('gridType');
+  const cellSize = el('cellSize');
+  const previewBox = el('previewBox');
+  const previewTitle = el('previewTitle');
+  const previewMeta = el('previewMeta');
+  const sheetMeta = el('sheetMeta');
+  const sheetGrid = el('sheetGrid');
+  const taskList = el('taskList');
+  const planDay = el('planDay');
+  const planBox = el('planBox');
+  const recordList = el('recordList');
+  const bestChars = el('bestChars');
+  const parentNote = el('parentNote');
+  const nextFocus = el('nextFocus');
+  const rewardText = el('rewardText');
+  const rewardStars = el('rewardStars');
+  const fontSelect = el('fontSelect');
+  const themeSelect = el('themeSelect');
+  const sourceCategory = el('sourceCategory');
+  const sourceItem = el('sourceItem');
+  const sourcePreview = el('sourcePreview');
+  const mistakeInput = el('mistakeInput');
+
+  function getSaved(key, fallback='') { try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; } }
+  function saveSetting(key, value) { try { localStorage.setItem(key, value); } catch {} }
+  function applyPageTitle(title) {
+    const safe = (title || '').trim() || '一沐写字小助手';
+    pageTitle.textContent = safe; document.title = safe; saveSetting(STYLE_KEYS.title, safe);
+  }
+  function applyTheme(themeKey) {
+    const key = ['traditional','fresh','cartoon'].includes(themeKey) ? themeKey : 'traditional';
+    document.body.dataset.theme = key; themeSelect.value = key; saveSetting(STYLE_KEYS.theme, key);
+  }
+  function applyFont(fontKey) {
+    const key = FONT_OPTIONS[fontKey] ? fontKey : 'kai';
+    previewBox.style.setProperty('--glyph-font', FONT_OPTIONS[key]); fontSelect.value = key; saveSetting(STYLE_KEYS.font, key);
+  }
+  function loadMistakes() { const txt = localStorage.getItem(MISTAKE_KEY) || ''; mistakeInput.value = txt; return txt; }
+  function saveMistakes() { localStorage.setItem(MISTAKE_KEY, mistakeInput.value.trim()); }
+  function mergeCurrentIntoMistakes() {
+    const current = parseChars(charsInput.value); if (!current.length) { alert('当前练习还是空的，拿什么加进常错字？先填字。'); return; }
+    const existing = (loadMistakes() || '').split(/\s+/).filter(Boolean); const merged = [...new Set([...existing, ...current])]; mistakeInput.value = merged.join(' '); saveMistakes(); alert('当前这组字已经塞进常错字了。别每次重新手抄，怪累的。');
+  }
+  function parseChars(text) { return text.replace(/[，、,\/\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean).flatMap(item => item.length > 1 ? [...item] : [item]).filter(ch => /[\u4e00-\u9fff]/.test(ch)); }
+  function normalizeChars(chars) {
+    const deduped = [...new Set(chars)];
+    if (deduped.length >= 8) return deduped.slice(0, 8);
+    const pool = ['一','二','三','十','口','日','木','人','大','上','下','中','小','土','田','山','月','水','火','心','手','云','风','春','学','写','看','真','好'];
+    for (const ch of pool) { if (deduped.length >= 8) break; if (!deduped.includes(ch)) deduped.push(ch); }
+    return deduped.slice(0, 8);
+  }
+  function normalizeTemplateChars(chars) { return chars.filter(Boolean); }
+  function getMode() { return document.querySelector('input[name="mode"]:checked').value; }
+  function isTemplateMode() { return sourceCategory.value !== 'custom'; }
+  function shuffle(list) { return [...list].sort(() => Math.random() - 0.5); }
+  function randomBatch(bank, count) { return shuffle(bank).slice(0, count); }
+  function fillPreset(type) {
+    charsInput.value = randomBatch(PRESET_BANKS[type] || PRESET_BANKS.basic, 8).join(' ');
+    sourceCategory.value = 'custom'; renderSourceItems('custom'); saveSetting(STYLE_KEYS.sourceCategory, 'custom'); generateSheet();
+  }
+  function sizeConfig(size) { if (size === 'small') return { cell: '56px', char: '42px' }; if (size === 'large') return { cell: '92px', char: '68px' }; return { cell: '72px', char: '52px' }; }
+  function getAvailableSheetWidth() { return Math.max(320, (previewBox.clientWidth || 0) - 32); }
+  function getPracticeRepeatCount(cell) { const cellPx = parseInt(cell, 10) || 72; const gap = 8; const max = Math.floor((getAvailableSheetWidth() - cellPx) / (cellPx + gap)); return Math.max(3, Math.min(8, max || 3)); }
+  function getTemplatePerRow(cell) { const cellPx = parseInt(cell, 10) || 72; const gap = 8; const max = Math.floor((getAvailableSheetWidth() + gap) / (cellPx + gap)); return Math.max(3, max || 3); }
+  function modePattern(mode, count) { if (mode === 'trace') return Array.from({ length: count }, () => 'ghost'); if (mode === 'copy') return Array.from({ length: count }, () => 'blank'); return Array.from({ length: count }, (_, i) => i === 0 ? 'ghost' : 'blank'); }
+  function buildCell(char, type, isMi) {
+    const box = document.createElement('div'); box.className = 'cell' + (type === 'sample' ? ' sample-cell' : '') + (type === 'template' ? ' template-cell' : '');
+    ['line-v','line-h'].forEach(cls => { const d = document.createElement('div'); d.className = cls; box.appendChild(d); });
+    if (isMi) { ['line-d1','line-d2'].forEach(cls => { const d = document.createElement('div'); d.className = cls; box.appendChild(d); }); }
+    if (type === 'sample' || type === 'ghost' || type === 'template') { const span = document.createElement('div'); span.className = type; span.textContent = char; box.appendChild(span); }
+    return box;
+  }
+  function getModeLabel(mode) { return mode === 'trace' ? '描红版' : mode === 'copy' ? '临写版' : '混合版'; }
+  function currentDateLabel() { const d = new Date(); return `${d.getMonth()+1}月${d.getDate()}日`; }
+  function renderPracticeSheet(chars, isMi, cell) {
+    const count = getPracticeRepeatCount(cell); const mode = getMode(); const pattern = modePattern(mode, count);
+    chars.forEach(charText => {
+      const row = document.createElement('div'); row.className = 'char-row';
+      const cells = document.createElement('div'); cells.className = 'cells'; cells.style.setProperty('--cols', count + 1); cells.style.setProperty('--cell-size', cell);
+      cells.appendChild(buildCell(charText, 'sample', isMi)); pattern.forEach(type => cells.appendChild(buildCell(charText, type, isMi)));
+      row.appendChild(cells); sheetGrid.appendChild(row);
+    });
+    sheetMeta.textContent = `${isMi ? '米字格' : '田字格'}｜${getModeLabel(mode)}｜每字${count}次`;
+    previewTitle.textContent = '今日练习字帖'; previewMeta.textContent = `日期：${currentDateLabel()}｜今天任务：把字写稳，不求快`; sheetGrid.classList.remove('template-mode');
+  }
+  function renderTemplateSheet(chars, isMi, cell) {
+    const perRow = getTemplatePerRow(cell);
+    for (let i = 0; i < chars.length; i += perRow) {
+      const group = chars.slice(i, i + perRow); const row = document.createElement('div'); row.className = 'char-row';
+      const cells = document.createElement('div'); cells.className = 'cells'; cells.style.setProperty('--cols', group.length); cells.style.setProperty('--cell-size', cell);
+      group.forEach(ch => cells.appendChild(buildCell(ch, 'template', isMi))); row.appendChild(cells); sheetGrid.appendChild(row);
+    }
+    sheetMeta.textContent = `${isMi ? '米字格' : '田字格'}｜逐字字帖｜共${chars.length}字`;
+    const entry = getSourceEntry(); previewTitle.textContent = entry ? entry.title : '字帖练习'; previewMeta.textContent = `来源：${sourceCategory.value === 'poem' ? '诗词' : sourceCategory.value === 'classic' ? '经书' : '名家字帖'}｜逐字描红`;
+    sheetGrid.classList.add('template-mode');
+  }
+  function generateSheet() {
+    const parsed = parseChars(charsInput.value); const templateMode = isTemplateMode(); const chars = templateMode ? normalizeTemplateChars(parsed) : normalizeChars(parsed);
+    if (!chars.length) { alert('你还没输入今天要练的字。先输几个字，别空着。'); return; }
+    const isMi = gridType.value === 'mi'; const size = sizeConfig(cellSize.value);
+    previewBox.style.setProperty('--cell-size', size.cell); previewBox.style.setProperty('--char-size', size.char); sheetGrid.innerHTML = '';
+    if (templateMode) renderTemplateSheet(chars, isMi, size.cell); else renderPracticeSheet(chars, isMi, size.cell);
+    updateTask(chars);
+  }
+  function updateTask(chars) {
+    const focus = focusHints[Math.floor(Math.random() * focusHints.length)];
+    const parent = parentHints[Math.floor(Math.random() * parentHints.length)];
+    taskList.innerHTML = `
+      <div class="record-item">练习内容：${chars.join('、')}</div>
+      <div class="record-item">建议时长：10 分钟</div>
+      <div class="record-item">今日重点：${focus}</div>
+      <div class="record-item">家长提醒：${parent}</div>
+    `;
+    if (isTemplateMode()) {
+      taskList.innerHTML += `<div class="record-item">模板模式：${sourceCategory.value === 'poem' ? '诗词' : sourceCategory.value === 'classic' ? '经书' : '名家字帖'}，会按全文逐字排版。</div>`;
+    }
+  }
+  function renderPlan(dayIndex = 0) {
+    const item = TRAINING_PLAN[dayIndex]; planDay.value = String(dayIndex);
+    planBox.innerHTML = `<div class="plan-day">第${item.day}天</div><div class="plan-meta"><div><strong>练习字：</strong>${item.chars}</div><div><strong>训练重点：</strong>${item.focus}</div><div><strong>家长提醒：</strong>${item.tip}</div></div>`;
+  }
+  function applyPlan(dayIndex) {
+    const item = TRAINING_PLAN[dayIndex]; charsInput.value = item.chars; nextFocus.value = item.chars; parentNote.value = item.focus; sourceCategory.value = 'custom'; renderSourceItems('custom'); generateSheet();
+  }
+  function getRecords() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } }
+  function saveRecords(records) { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
+  function updateReward(done, chars='') { if (done) { const count = Math.min(3, Math.max(1, parseChars(chars).length >= 6 ? 3 : 2)); rewardText.textContent = `今天这组字已经拿下了：${chars || '已完成'}。继续稳住，别飘。`; rewardStars.textContent = '★ '.repeat(count).trim() + ' ' + '☆ '.repeat(3-count).trim(); } else { rewardText.textContent = '今天先记个未完成。没事，明天补上，别装死就行。'; rewardStars.textContent = '★ ☆ ☆'; } }
+  function renderRecords() {
+    const records = getRecords();
+    if (!records.length) { recordList.innerHTML = '<div class="record-item">还没有训练记录。先从今天开始，别想太多。</div>'; return; }
+    recordList.innerHTML = records.slice(0, 7).map((item, idx) => `
+      <div class="record-item">
+        <div><strong>${item.date}</strong>｜${item.chars || '未填写'}<span class="pill ${item.done ? 'ok' : 'no'}">${item.done ? '已完成' : '未完成'}</span></div>
+        <div class="muted" style="margin-top:6px;">满意字：${item.best || '—'} ｜ 备注：${item.note || '—'} ｜ 明天盯：${item.next || '—'}</div>
+        <div class="record-actions">
+          <button type="button" class="tiny-btn retrain-btn" data-index="${idx}">重新练这组字</button>
+          <button type="button" class="tiny-btn danger-lite delete-record-btn" data-index="${idx}">删除这条</button>
+        </div>
+      </div>`).join('');
+    document.querySelectorAll('.retrain-btn').forEach(btn => btn.addEventListener('click', () => {
+      const item = records[Number(btn.dataset.index)]; charsInput.value = item.chars.split('、').join(' '); sourceCategory.value = 'custom'; renderSourceItems('custom'); nextFocus.value = item.next || item.chars; parentNote.value = item.note || ''; generateSheet();
+    }));
+    document.querySelectorAll('.delete-record-btn').forEach(btn => btn.addEventListener('click', () => {
+      const idx = Number(btn.dataset.index); const nextRecords = getRecords(); nextRecords.splice(idx, 1); saveRecords(nextRecords); renderRecords();
+    }));
+  }
+  function saveRecord(done) {
+    const chars = parseChars(charsInput.value).join('、'); if (!chars) { alert('字都没填，你打什么卡，别闹。先把今天要练的字输进去。'); return; }
+    const d = new Date(); const label = `${d.getMonth()+1}月${d.getDate()}日`; const records = getRecords().filter(item => !(item.date === label && item.chars === chars));
+    records.unshift({ date: label, chars, done, best: bestChars.value.trim(), note: parentNote.value.trim(), next: nextFocus.value.trim() }); saveRecords(records); renderRecords(); updateReward(done, chars);
+  }
+  function getSourceEntry() { const cat = sourceCategory.value === 'copybook' ? 'classic' : sourceCategory.value; const list = SOURCE_LIBRARY[cat] || []; const idx = Number(sourceItem.value || 0); return list[idx] || null; }
+  function renderSourceItems(category, selectedIndex = 0) {
+    sourceItem.innerHTML = '';
+    if (category === 'copybook') category = 'classic';
+    const list = SOURCE_LIBRARY[category] || [];
+    if (!list.length) {
+      const opt = document.createElement('option'); opt.value = '0'; opt.textContent = '自定义内容无需列表'; sourceItem.appendChild(opt); sourceItem.disabled = true; sourcePreview.textContent = '在左侧输入你要练的字，点“生成今日字帖”即可.'; return;
+    }
+    sourceItem.disabled = false;
+    list.forEach((item, idx) => { const opt = document.createElement('option'); opt.value = String(idx); opt.textContent = item.title; if (idx === selectedIndex) opt.selected = true; sourceItem.appendChild(opt); });
+    const entry = list[selectedIndex] || list[0]; sourcePreview.textContent = entry ? `${entry.title}：${entry.text}` : '';
+  }
+  function loadCurrentSource() { const entry = getSourceEntry(); if (!entry) return; charsInput.value = entry.text; generateSheet(); }
+  function initStyleControls() {
+    applyPageTitle(getSaved(STYLE_KEYS.title, pageTitle.textContent || '一沐写字小助手'));
+    applyTheme(getSaved(STYLE_KEYS.theme, 'traditional'));
+    applyFont(getSaved(STYLE_KEYS.font, 'kai'));
+    const savedCat = getSaved(STYLE_KEYS.sourceCategory, 'custom'); sourceCategory.value = savedCat; renderSourceItems(savedCat, Number(getSaved(STYLE_KEYS.sourceItem, '0')) || 0); sourceItem.value = getSaved(STYLE_KEYS.sourceItem, '0');
+    cellSize.value = getSaved('yimu-writing-helper-cellSize', 'small');
+    charsInput.disabled = false; charsInput.readOnly = false;
+    const entry = getSourceEntry(); sourcePreview.textContent = entry ? `${entry.title}：${entry.text}` : '在左侧输入你要练的字，点“生成今日字帖”即可。';
+  }
+
+  // Events
+  editTitleBtn.addEventListener('click', () => { const next = prompt('输入新的标题', pageTitle.textContent || '一沐写字小助手'); if (next === null) return; applyPageTitle(next); });
+  fontSelect.addEventListener('change', () => applyFont(fontSelect.value));
+  themeSelect.addEventListener('change', () => applyTheme(themeSelect.value));
+  cellSize.addEventListener('change', () => saveSetting('yimu-writing-helper-cellSize', cellSize.value));
+  sourceCategory.addEventListener('change', () => { const cat = sourceCategory.value; saveSetting(STYLE_KEYS.sourceCategory, cat); renderSourceItems(cat, 0); saveSetting(STYLE_KEYS.sourceItem, '0'); charsInput.disabled = false; charsInput.readOnly = false; });
+  sourceItem.addEventListener('change', () => { saveSetting(STYLE_KEYS.sourceItem, sourceItem.value); const entry = getSourceEntry(); sourcePreview.textContent = entry ? `${entry.title}：${entry.text}` : ''; });
+  loadSourceBtn.addEventListener('click', loadCurrentSource);
+  document.getElementById('generateBtn').addEventListener('click', generateSheet);
+  document.getElementById('presetBasicBtn').addEventListener('click', () => fillPreset('basic'));
+  document.getElementById('presetStructureBtn').addEventListener('click', () => fillPreset('structure'));
+  document.getElementById('presetMistakeBtn').addEventListener('click', () => fillPreset('commonMistakes'));
+  document.getElementById('groupBoxBtn').addEventListener('click', () => fillPreset('box'));
+  document.getElementById('groupLeftRightBtn').addEventListener('click', () => fillPreset('leftRight'));
+  document.getElementById('groupSingleBtn').addEventListener('click', () => fillPreset('single'));
+  document.getElementById('groupClassBtn').addEventListener('click', () => fillPreset('classUse'));
+  document.getElementById('printBtn').addEventListener('click', () => { if (!sheetGrid.children.length) generateSheet(); window.print(); });
+  document.getElementById('pdfBtn').addEventListener('click', () => { if (!sheetGrid.children.length) generateSheet(); window.print(); });
+  document.getElementById('clearBtn').addEventListener('click', () => { charsInput.value = ''; });
+  document.getElementById('exampleBtn').addEventListener('click', () => { charsInput.value = '一 二 三 十 口 日 木 人'; sourceCategory.value = 'custom'; renderSourceItems('custom'); generateSheet(); });
+  document.getElementById('mistakeBtn').addEventListener('click', () => { const txt = loadMistakes(); if (!txt) { alert('还没存常错字。先在右边“常错字小本本”里记几个。'); return; } sourceCategory.value = 'custom'; renderSourceItems('custom'); charsInput.value = txt; generateSheet(); });
+  document.getElementById('doneBtn').addEventListener('click', () => saveRecord(true));
+  document.getElementById('skipBtn').addEventListener('click', () => saveRecord(false));
+  document.getElementById('saveMistakeBtn').addEventListener('click', () => { saveMistakes(); alert('常错字已经记下来了。下次别从头骂，直接专项练。'); });
+  document.getElementById('loadMistakeBtn').addEventListener('click', () => { const txt = loadMistakes(); if (!txt) { alert('常错字还是空的，先存几个。'); return; } sourceCategory.value = 'custom'; renderSourceItems('custom'); charsInput.value = txt; generateSheet(); });
+  document.getElementById('clearMistakeBtn').addEventListener('click', () => { localStorage.removeItem(MISTAKE_KEY); mistakeInput.value = ''; alert('常错字清空了。重新攒一版也行。'); });
+  document.getElementById('saveCurrentBtn').addEventListener('click', mergeCurrentIntoMistakes);
+  TRAINING_PLAN.forEach((item, index) => { const opt = document.createElement('option'); opt.value = String(index); opt.textContent = `第${item.day}天｜${item.chars}`; planDay.appendChild(opt); });
+  planDay.addEventListener('change', e => renderPlan(Number(e.target.value)));
+  document.getElementById('applyPlanBtn').addEventListener('click', () => applyPlan(Number(planDay.value)));
+  document.getElementById('prevPlanBtn').addEventListener('click', () => renderPlan(Math.max(0, Number(planDay.value) - 1)));
+  document.getElementById('nextPlanBtn').addEventListener('click', () => renderPlan(Math.min(TRAINING_PLAN.length - 1, Number(planDay.value) + 1)));
+
+  renderRecords(); loadMistakes(); renderPlan(0); initStyleControls(); rewardText.textContent = '今天还没打卡。先写完，再领星星。'; rewardStars.textContent = '☆ ☆ ☆'; charsInput.value = '一 二 三 十 口 日 木 人'; sourceCategory.value = 'custom'; renderSourceItems('custom'); generateSheet();
+})();
+</script>
+</body>
+</html>
