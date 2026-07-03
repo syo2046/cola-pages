@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>初二物理 · 上学期知识点</title>
+<style>
+:root{
+  --ink:#1d2433;
+  --muted:#6b7280;
+  --surface:#ffffff;
+  --bg:#f4f6fb;
+  --accent:#2f6fed;
+  --accent-soft:#e8f0ff;
+  --warn:#e0532b;
+  --warn-soft:#fdece5;
+  --good:#1f9d63;
+  --good-soft:#e6f7ee;
+  --gold:#c98a1f;
+  --gold-soft:#fbf1de;
+  --border:#e6e9f0;
+  --radius:16px;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);}
+body{display:flex;min-height:100vh;}
+
+/* ---------- Sidebar ---------- */
+.sidebar{
+  width:260px;
+  flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  padding:28px 18px;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+}
+.brand{
+  font-size:15px;
+  font-weight:700;
+  color:var(--accent);
+  letter-spacing:0.5px;
+  margin-bottom:4px;
+}
+.brand-sub{
+  font-size:22px;
+  font-weight:800;
+  margin-bottom:22px;
+  line-height:1.3;
+}
+.progress-wrap{
+  margin-bottom:22px;
+}
+.progress-label{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:6px;
+  display:flex;
+  justify-content:space-between;
+}
+.progress-bar{
+  height:8px;
+  background:var(--accent-soft);
+  border-radius:99px;
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  background:var(--accent);
+  border-radius:99px;
+  transition:width .4s ease;
+  width:0%;
+}
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  border-radius:12px;
+  cursor:pointer;
+  margin-bottom:6px;
+  font-size:14.5px;
+  font-weight:600;
+  color:var(--muted);
+  transition:background .15s ease, color .15s ease;
+  user-select:none;
+}
+.nav-item:hover{background:var(--accent-soft);color:var(--accent);}
+.nav-item.active{background:var(--accent);color:#fff;}
+.nav-num{
+  width:24px;height:24px;border-radius:50%;
+  background:rgba(0,0,0,.06);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;flex-shrink:0;
+}
+.nav-item.active .nav-num{background:rgba(255,255,255,.25);}
+.nav-item.done .nav-num::after{content:"✓";}
+.nav-item.done .nav-num{background:var(--good);color:#fff;}
+.nav-item.done .nav-num *{display:none;}
+
+/* ---------- Main ---------- */
+.main{flex:1;padding:36px 44px 80px;max-width:920px;margin:0 auto;}
+.chapter{display:none;animation:fadeIn .35s ease;}
+.chapter.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+.chapter-head{
+  display:flex;
+  gap:24px;
+  align-items:flex-start;
+  margin-bottom:28px;
+  flex-wrap:wrap;
+}
+.chapter-img{
+  width:200px;
+  border-radius:var(--radius);
+  box-shadow:0 8px 24px rgba(20,30,60,.12);
+  flex-shrink:0;
+}
+.chapter-title-wrap{flex:1;min-width:220px;}
+.chapter-eyebrow{
+  font-size:13px;
+  color:var(--accent);
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  margin-bottom:6px;
+}
+.chapter-title{
+  font-size:32px;
+  font-weight:800;
+  margin:0 0 10px;
+  line-height:1.25;
+}
+.chapter-desc{
+  color:var(--muted);
+  font-size:15px;
+  line-height:1.6;
+}
+
+.section{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  margin-bottom:16px;
+  overflow:hidden;
+}
+.section-head{
+  padding:16px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+  font-size:16px;
+  font-weight:700;
+}
+.section-head:hover{background:var(--bg);}
+.section-head .chev{
+  transition:transform .2s ease;
+  color:var(--muted);
+  font-size:14px;
+}
+.section.open .chev{transform:rotate(180deg);}
+.section-body{
+  max-height:0;
+  overflow:hidden;
+  transition:max-height .3s ease;
+  padding:0 20px;
+}
+.section.open .section-body{padding:0 20px 18px;}
+.section-body ul{margin:8px 0;padding-left:22px;}
+.section-body li{margin-bottom:8px;line-height:1.7;font-size:14.5px;}
+.section-body p{line-height:1.7;font-size:14.5px;}
+.section-body table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px;}
+.section-body th,.section-body td{border:1px solid var(--border);padding:8px 10px;text-align:center;}
+.section-body th{background:var(--bg);}
+
+.callout{
+  border-radius:12px;
+  padding:14px 16px;
+  margin:12px 0;
+  font-size:14px;
+  line-height:1.65;
+}
+.callout-title{font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.callout.formula{background:var(--accent-soft);border:1px solid #cddcfb;}
+.callout.formula .callout-title{color:var(--accent);}
+.callout.pitfall{background:var(--warn-soft);border:1px solid #f6cdb9;}
+.callout.pitfall .callout-title{color:var(--warn);}
+.callout.mnemonic{background:var(--gold-soft);border:1px solid #f0dcaf;}
+.callout.mnemonic .callout-title{color:var(--gold);}
+.formula-big{
+  font-size:20px;
+  font-weight:800;
+  background:#fff;
+  border-radius:8px;
+  padding:8px 14px;
+  display:inline-block;
+  margin:4px 0;
+  color:var(--ink);
+}
+
+/* ---------- Quiz ---------- */
+.quiz-box{
+  background:linear-gradient(135deg,#f8faff,#eef3ff);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px 22px;
+  margin-top:8px;
+}
+.quiz-box h3{margin:0 0 4px;font-size:17px;}
+.quiz-box .quiz-sub{color:var(--muted);font-size:13px;margin-bottom:14px;}
+.quiz-q{margin-bottom:18px;}
+.quiz-q-text{font-weight:700;font-size:14.5px;margin-bottom:10px;}
+.quiz-opts{display:grid;gap:8px;}
+.quiz-opt{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:10px;
+  padding:10px 14px;
+  font-size:14px;
+  cursor:pointer;
+  transition:border-color .15s ease, background .15s ease;
+  text-align:left;
+}
+.quiz-opt:hover{border-color:var(--accent);}
+.quiz-opt.correct{background:var(--good-soft);border-color:var(--good);font-weight:700;}
+.quiz-opt.wrong{background:var(--warn-soft);border-color:var(--warn);}
+.quiz-opt[disabled]{cursor:default;}
+.quiz-result{margin-top:16px;font-weight:700;font-size:14.5px;}
+
+/* ---------- Footer nav ---------- */
+.chapter-nav{
+  display:flex;
+  justify-content:space-between;
+  margin-top:32px;
+  gap:12px;
+}
+.nav-btn{
+  border:none;
+  border-radius:12px;
+  padding:12px 20px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  background:var(--accent);
+  color:#fff;
+}
+.nav-btn.ghost{background:#fff;border:1px solid var(--border);color:var(--ink);}
+.nav-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+/* intro */
+.intro-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:32px;
+  text-align:center;
+}
+.intro-card h2{font-size:26px;margin:0 0 12px;}
+.intro-card p{color:var(--muted);font-size:15px;line-height:1.7;max-width:520px;margin:0 auto 20px;}
+.grid-cards{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin-top:24px;
+}
+.mini-card{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px;
+  cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease;
+  text-align:left;
+}
+.mini-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(20,30,60,.10);}
+.mini-card img{width:100%;border-radius:10px;margin-bottom:10px;}
+.mini-card h4{margin:0 0 4px;font-size:14.5px;}
+.mini-card span{font-size:12px;color:var(--muted);}
+
+@media (max-width: 860px){
+  body{flex-direction:column;}
+  .sidebar{width:100%;height:auto;position:relative;display:flex;flex-direction:column;}
+  .main{padding:24px 18px 60px;}
+  .grid-cards{grid-template-columns:1fr 1fr;}
+  .chapter-img{width:120px;}
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="brand">人教版 · 八年级上册</div>
+  <div class="brand-sub">初二物理<br>知识点导航</div>
+
+  <div class="progress-wrap">
+    <div class="progress-label"><span>学习进度</span><span id="progressText">0/6</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <div class="nav-item active" data-target="intro" onclick="goTo('intro')">
+    <span class="nav-num">·</span> 首页
+  </div>
+  <div class="nav-item" data-target="ch1" onclick="goTo('ch1')"><span class="nav-num">1</span> 机械运动</div>
+  <div class="nav-item" data-target="ch2" onclick="goTo('ch2')"><span class="nav-num">2</span> 声现象</div>
+  <div class="nav-item" data-target="ch3" onclick="goTo('ch3')"><span class="nav-num">3</span> 物态变化</div>
+  <div class="nav-item" data-target="ch4" onclick="goTo('ch4')"><span class="nav-num">4</span> 光现象</div>
+  <div class="nav-item" data-target="ch5" onclick="goTo('ch5')"><span class="nav-num">5</span> 透镜及其应用</div>
+  <div class="nav-item" data-target="ch6" onclick="goTo('ch6')"><span class="nav-num">6</span> 质量与密度</div>
+</aside>
+
+<main class="main">
+
+  <!-- INTRO -->
+  <section class="chapter active" id="intro">
+    <div class="intro-card">
+      <h2>初二物理 · 上学期知识点地图</h2>
+      <p>六个章节，点开每一块知识点看详解、易错点、记忆口诀，学完还有小测验检验一下。全部内容依据人教版《义务教育教科书·物理》八年级上册整理。</p>
+      <div class="grid-cards" id="introGrid"></div>
+    </div>
+  </section>
+
+  <!-- CHAPTERS injected by JS -->
+  <div id="chaptersRoot"></div>
+
+</main>
+
+<script>
+const IMG_DIR = "images/";
+
+const chapters = [
+{
+  id:"ch1", num:1, title:"机械运动", img:IMG_DIR+"ch1.png",
+  desc:"从测量长度和时间讲起，学会判断运动、计算速度，是整本书的基础章节。",
+  sections:[
+    {
+      h:"1.1 长度和时间的测量",
+      body:`
+      <p><b>长度的基本单位</b>：米（m）。常用：千米(km)、分米(dm)、厘米(cm)、毫米(mm)、微米(μm)、纳米(nm)</p>
+      <ul><li>换算关系（每级差1000或10）：1km=1000m，1m=10dm=100cm=1000mm，1cm=10mm</li></ul>
+      <p><b>测量工具</b>：刻度尺。使用要点：</p>
+      <ul>
+        <li>使用前观察：零刻度线、量程（能测的最大范围）、分度值（最小刻度，决定精确度）</li>
+        <li>放置：刻度尺贴近被测物，不能歪斜</li>
+        <li>读数：视线与尺面垂直，估读到分度值的下一位</li>
+        <li>记录：数值+单位，例如 3.20cm 不能写成 3.2cm（要保留估读位）</li>
+      </ul>
+      <p><b>时间单位</b>：秒（s）。1h=60min，1min=60s</p>
+      <div class="callout pitfall"><div class="callout-title">⚠️ 误差与错误的区别</div>
+      误差：测量值与真实值之间的差异，<b>不可避免</b>，只能减小不能消除。<br>
+      错误：由不规范操作、读错造成，<b>可以避免</b>。<br>
+      减小误差的方法：多次测量取平均值、选用精密仪器。</div>
+      `
+    },
+    {
+      h:"1.2 运动的描述",
+      body:`
+      <p><b>机械运动</b>：物体位置随时间的变化</p>
+      <p><b>参照物</b>：判断物体是否运动，要先选定一个参照物（假定不动的物体）</p>
+      <div class="callout pitfall"><div class="callout-title">⚠️ 重点</div>
+      同一物体，参照物不同，运动状态的描述可能不同。比如"地上的人看火车在动，车上乘客看座位没动"。<br>
+      常见坑：题目不说明参照物时，默认地面为参照物。</div>
+      `
+    },
+    {
+      h:"1.3 运动的快慢",
+      body:`
+      <div class="callout formula"><div class="callout-title">📐 速度公式</div>
+      <span class="formula-big">v = s / t</span><br>v-速度，s-路程，t-时间。单位：米/秒(m/s)、千米/时(km/h)<br>
+      换算：1m/s = 3.6km/h（记忆技巧："米秒乘3.6变千米时"）</div>
+      <p><b>匀速直线运动</b>：速度大小和方向都不变的运动</p>
+      <div class="callout pitfall"><div class="callout-title">⚠️ 最常见错误</div>
+      变速运动的<b>平均速度 = 总路程 / 总时间</b>，<b>不是</b>各段速度的平均值！</div>
+      `
+    },
+    {
+      h:"1.4 测量平均速度",
+      body:`
+      <p>实验器材：斜面、小车、刻度尺、秒表、金属挡板</p>
+      <p>原理：v=s/t，分段测距离和时间分别计算</p>
+      `
+    }
+  ],
+  quiz:[
+    {q:"小明坐在行驶的公交车里，以座位为参照物，他是否在运动？",opts:["运动","静止","无法判断"],correct:1,tip:"以座位为参照物，小明相对座位位置没变，所以是静止的。"},
+    {q:"一辆车前半段路程速度20m/s，后半段速度10m/s，全程平均速度是多少？",opts:["15m/s","大于15m/s，小于20m/s","小于15m/s"],correct:2,tip:"平均速度=总路程/总时间，因为后半段用时更长，平均值会偏向速度较小的一段，所以小于15m/s。"},
+    {q:"下面哪个换算是对的？",opts:["1m/s = 3.6km/h","1m/s = 36km/h","1m/s = 0.36km/h"],correct:0,tip:"记忆口诀：米秒乘3.6变千米时。"}
+  ]
+},
+{
+  id:"ch2", num:2, title:"声现象", img:IMG_DIR+"ch2.png",
+  desc:"声音怎么产生、怎么传播，音调响度音色怎么区分，还有噪声怎么控制。",
+  sections:[
+    {
+      h:"2.1 声音的产生与传播",
+      body:`
+      <p><b>产生</b>：声音由物体的<b>振动</b>产生，振动停止，发声停止（但声音不一定消失，可能还在传播）</p>
+      <p><b>传播</b>：声音需要<b>介质</b>（固体、液体、气体），<b>真空不能传声</b></p>
+      <div class="callout formula"><div class="callout-title">📐 声速</div>
+      不同介质中传播速度不同，一般 <b>固体 &gt; 液体 &gt; 气体</b><br>
+      15℃空气中声速约 <span class="formula-big">340 m/s</span>（必背数据）</div>
+      `
+    },
+    {
+      h:"2.2 声音的特性",
+      body:`
+      <p>声音的三个特性：</p>
+      <ul>
+        <li><b>音调</b>：声音的高低，由<b>振动频率</b>决定，频率越高音调越高</li>
+        <li><b>响度</b>：声音的强弱（大小），由<b>振幅</b>和距发声体的远近决定</li>
+        <li><b>音色</b>：声音的品质特色，由发声体本身的材料、结构决定（区分不同乐器、不同人说话的依据）</li>
+      </ul>
+      <div class="callout mnemonic"><div class="callout-title">💡 记忆技巧</div>
+      音调——高低（"调"像音符高低）；响度——大小（"响"想到音量大小）；音色——辨别谁在说话</div>
+      `
+    },
+    {
+      h:"2.3 声的利用",
+      body:`
+      <ul>
+        <li>回声定位（蝙蝠、B超、声呐）</li>
+        <li>超声波（频率&gt;20000Hz，人耳听不到）：清洗精密仪器、医用诊断</li>
+        <li>次声波（频率&lt;20Hz，人耳听不到）：地震、火山监测</li>
+      </ul>
+      `
+    },
+    {
+      h:"2.4 噪声的危害和控制",
+      body:`
+      <p>噪声控制三个环节：</p>
+      <ul>
+        <li>在<b>声源处</b>减弱（如给机器加消音器）</li>
+        <li>在<b>传播过程中</b>减弱（如隔音墙、种树）</li>
+        <li>在<b>人耳处</b>减弱（如戴耳塞）</li>
+      </ul>
+      `
+    }
+  ],
+  quiz:[
+    {q:"男生和女生说话声音的粗细不同，主要区别的是声音的哪个特性？",opts:["音调","响度","音色"],correct:0,tip:"声音粗细即音调高低，由振动频率决定。"},
+    {q:"太空中宇航员之间不能直接用声音对话，为什么？",opts:["声音传播太快","太空是真空，没有介质传声","太空温度太低"],correct:1,tip:"真空不能传声，必须靠无线电通讯。"},
+    {q:"在传播过程中减弱噪声的方法是？",opts:["给机器加消音器","戴耳塞","在道路旁建隔音墙"],correct:2,tip:"消音器是声源处减弱，耳塞是人耳处减弱，隔音墙是传播过程中减弱。"}
+  ]
+},
+{
+  id:"ch3", num:3, title:"物态变化", img:IMG_DIR+"ch3.png",
+  desc:"温度计原理，六种物态变化怎么转化，吸热还是放热是这章的核心。",
+  sections:[
+    {
+      h:"3.1 温度",
+      body:`
+      <p>摄氏温度单位：℃，规定：冰水混合物0℃，一个标准大气压下沸水100℃</p>
+      <p>温度计原理：液体的热胀冷缩</p>
+      <p>体温计特殊结构：中间有缩口，读数前离开人体也不会变化（可以离开人体读数）</p>
+      `
+    },
+    {
+      h:"3.2 熔化和凝固",
+      body:`
+      <p><b>熔化</b>：固态→液态，<b>吸热</b>&nbsp;&nbsp;|&nbsp;&nbsp;<b>凝固</b>：液态→固态，<b>放热</b></p>
+      <div class="callout pitfall"><div class="callout-title">⚠️ 晶体与非晶体的区别</div>
+      晶体（冰、食盐、萤石、各种金属等）：有固定的熔点/凝固点，熔化/凝固过程中<b>温度不变</b>。<br>
+      非晶体（松香、蜡、玻璃、沥青等）：没有固定熔点，熔化过程温度持续上升。<br>
+      图像特征：晶体图像中有一段水平线（吸热但温度不变，正在熔化）。</div>
+      `
+    },
+    {
+      h:"3.3 汽化和液化",
+      body:`
+      <p><b>汽化</b>：液态→气态，<b>吸热</b>，两种方式：</p>
+      <ul>
+        <li><b>蒸发</b>：任何温度下都能发生，只在液面进行。加快蒸发的方法：提高液体温度、增大液体表面积、加快液体表面空气流动速度</li>
+        <li><b>沸腾</b>：一定温度（沸点）才发生，液体表面和内部同时剧烈汽化，温度不变，持续吸热。气压越高沸点越高（高压锅原理），气压越低沸点越低（高原上水烧不到100℃）</li>
+      </ul>
+      <p><b>液化</b>：气态→液态，<b>放热</b>，两种方法：降低温度、压缩体积（生活现象："白气"是液化后的小水珠，不是气体本身）</p>
+      `
+    },
+    {
+      h:"3.4 升华和凝华",
+      body:`
+      <p><b>升华</b>：固态→气态直接转化，<b>吸热</b>（如干冰变小、樟脑丸变小、灯丝变细）</p>
+      <p><b>凝华</b>：气态→固态直接转化，<b>放热</b>（如霜、雪的形成、冬天窗户上的冰花）</p>
+      <div class="callout mnemonic"><div class="callout-title">💡 六种物态变化速记口诀</div>
+      熔化吸热固变液，凝固放热液变固；<br>
+      汽化吸热液变气，液化放热气变液；<br>
+      升华吸热固变气，凝华放热气变固。</div>
+      `
+    }
+  ],
+  quiz:[
+    {q:"冬天窗户上出现的冰花，属于哪种物态变化？",opts:["凝固","凝华","升华"],correct:1,tip:"水蒸气直接变成固态冰花，是凝华，放热。"},
+    {q:"高压锅能让食物更快煮熟的原理是？",opts:["气压升高使沸点升高，水温更高","气压升高使沸点降低","锅盖更厚保温更好"],correct:0,tip:"气压越高，沸点越高，水能达到更高温度，煮得更快。"},
+    {q:"冰在熔化过程中，温度如何变化？",opts:["持续上升","保持不变","先上升后下降"],correct:1,tip:"冰是晶体，熔化过程中温度保持不变，持续吸热。"}
+  ]
+},
+{
+  id:"ch4", num:4, title:"光现象", img:IMG_DIR+"ch4.png",
+  desc:"光沿直线传播、反射定律、平面镜成像、折射规律和色散，这一章图多易考。",
+  sections:[
+    {
+      h:"4.1 光的直线传播",
+      body:`
+      <p>光在<b>同种均匀介质</b>中沿直线传播</p>
+      <p>现象举例：小孔成像、影子、日食月食、激光准直</p>
+      <div class="callout formula"><div class="callout-title">📐 光速</div>
+      真空中 <span class="formula-big">c = 3×10⁸ m/s</span>（记忆重点，要背熟）</div>
+      `
+    },
+    {
+      h:"4.2 光的反射",
+      body:`
+      <p>反射定律：</p>
+      <ul>
+        <li>反射光线、入射光线、法线在同一平面内</li>
+        <li>反射光线和入射光线分居法线两侧</li>
+        <li><b>反射角=入射角</b></li>
+      </ul>
+      <div class="callout pitfall"><div class="callout-title">⚠️ 最容易出错的地方</div>
+      角度都是从法线量起，不是从镜面量起！</div>
+      <p>两种反射：<b>镜面反射</b>（平行光反射后仍平行，光滑表面）；<b>漫反射</b>（平行光反射后向各方向散开，粗糙表面，但每条光线仍遵守反射定律）</p>
+      `
+    },
+    {
+      h:"4.3 平面镜成像",
+      body:`
+      <div class="callout mnemonic"><div class="callout-title">💡 5字口诀</div>
+      <b>等大、正立、虚像、对称、等距</b><br>
+      像与物体大小相等；像与物体到镜面的距离相等；像和物体的连线与镜面垂直；所成的是虚像（光屏接收不到）。</div>
+      <p>作图法：对称法画像</p>
+      `
+    },
+    {
+      h:"4.4 光的折射",
+      body:`
+      <p>光从一种介质斜射入另一种介质时，传播方向发生改变</p>
+      <ul>
+        <li>光从空气斜射入水中或其他介质中，折射角<b>小于</b>入射角</li>
+        <li>光从水或其他介质斜射入空气中，折射角<b>大于</b>入射角</li>
+        <li>光垂直入射时，传播方向不变</li>
+      </ul>
+      <p>现象：筷子在水中"折断"、池水看起来比实际浅、海市蜃楼</p>
+      `
+    },
+    {
+      h:"4.5 光的色散",
+      body:`
+      <p>白光是由各种色光混合而成（牛顿三棱镜实验）</p>
+      <p>色光三原色：红、绿、蓝</p>
+      <p>物体的颜色：不透明物体的颜色由其反射的色光决定；透明物体的颜色由透过的色光决定</p>
+      `
+    }
+  ],
+  quiz:[
+    {q:"入射角是40°，反射角是多少？",opts:["40°","50°","80°"],correct:0,tip:"反射角=入射角，都是从法线量起。"},
+    {q:"人站在平面镜前2米处，像与人的距离是多少？",opts:["2米","4米","1米"],correct:1,tip:"像到镜面距离=物到镜面距离，所以像与人的总距离是2+2=4米。"},
+    {q:"筷子插入水中看起来是弯折的，这是因为？",opts:["光的直线传播","光的反射","光的折射"],correct:2,tip:"光从水中斜射入空气发生折射，导致视觉上看到筷子弯折。"}
+  ]
+},
+{
+  id:"ch5", num:5, title:"透镜及其应用", img:IMG_DIR+"ch5.png",
+  desc:"凸透镜成像规律是全书重点计算+图像综合题，务必吃透那张表格。",
+  sections:[
+    {
+      h:"5.1 透镜",
+      body:`
+      <p><b>凸透镜</b>：中间厚边缘薄，对光有<b>会聚</b>作用</p>
+      <p><b>凹透镜</b>：中间薄边缘厚，对光有<b>发散</b>作用</p>
+      <p>重要概念：主光轴、光心、焦点(F)、焦距(f)</p>
+      <p>凸透镜三条特殊光线：</p>
+      <ul>
+        <li>平行于主光轴的光线，经凸透镜后过焦点</li>
+        <li>过焦点的光线，经凸透镜后平行于主光轴射出</li>
+        <li>过光心的光线，传播方向不变</li>
+      </ul>
+      `
+    },
+    {
+      h:"5.2 凸透镜成像规律（本章最重要考点）",
+      body:`
+      <table>
+        <tr><th>物距u</th><th>像的性质</th><th>像距v</th><th>应用</th></tr>
+        <tr><td>u &gt; 2f</td><td>倒立、缩小、实像</td><td>f &lt; v &lt; 2f</td><td>照相机</td></tr>
+        <tr><td>u = 2f</td><td>倒立、等大、实像</td><td>v = 2f</td><td>（分界点）</td></tr>
+        <tr><td>f &lt; u &lt; 2f</td><td>倒立、放大、实像</td><td>v &gt; 2f</td><td>投影仪、幻灯机</td></tr>
+        <tr><td>u = f</td><td>不成像（平行光射出）</td><td>—</td><td>（分界点）</td></tr>
+        <tr><td>u &lt; f</td><td>正立、放大、虚像</td><td>—</td><td>放大镜</td></tr>
+      </table>
+      <div class="callout mnemonic"><div class="callout-title">💡 记忆口诀</div>
+      一焦分虚实，二焦分大小；物近像远像变大（物体靠近透镜，像距变远，像变大）。</div>
+      `
+    },
+    {
+      h:"5.3 生活中的透镜",
+      body:`
+      <ul>
+        <li>照相机：胶片上成倒立、缩小的实像</li>
+        <li>投影仪：屏幕上成倒立、放大的实像</li>
+        <li>放大镜：成正立、放大的虚像</li>
+      </ul>
+      `
+    },
+    {
+      h:"5.4 眼睛和眼镜",
+      body:`
+      <p>眼睛成像原理类似照相机，晶状体相当于凸透镜</p>
+      <p><b>近视眼</b>：晶状体太厚（或眼球前后径过长），像成在视网膜前方 → 用<b>凹透镜</b>矫正</p>
+      <p><b>远视眼</b>：晶状体太薄，像成在视网膜后方 → 用<b>凸透镜</b>矫正</p>
+      `
+    },
+    {
+      h:"5.5 显微镜和望远镜",
+      body:`
+      <p>显微镜：物镜（相当于投影仪，成倒立放大实像）+ 目镜（相当于放大镜，成正立放大虚像）</p>
+      <p>望远镜：物镜成缩小实像，目镜再放大</p>
+      `
+    }
+  ],
+  quiz:[
+    {q:"照相机成的是什么像？",opts:["正立放大的虚像","倒立缩小的实像","倒立放大的实像"],correct:1,tip:"物距u>2f时，成倒立、缩小的实像，对应照相机。"},
+    {q:"近视眼看远处物体模糊，应该配戴哪种透镜矫正？",opts:["凸透镜","凹透镜","平面镜"],correct:1,tip:"近视眼像成在视网膜前方，需要凹透镜发散光线往后移。"},
+    {q:"物体放在凸透镜焦点以内（u<f）时，成的是什么像？",opts:["正立、放大、虚像","倒立、放大、实像","倒立、缩小、实像"],correct:0,tip:"这正是放大镜的成像原理。"}
+  ]
+},
+{
+  id:"ch6", num:6, title:"质量与密度", img:IMG_DIR+"ch6.png",
+  desc:"天平的使用、密度公式ρ=m/V，是计算题高频章节，务必背熟三种变形。",
+  sections:[
+    {
+      h:"6.1 质量",
+      body:`
+      <p>定义：物体所含物质的多少，是物体的基本属性，<b>不随形状、状态、位置改变而改变</b></p>
+      <div class="callout pitfall"><div class="callout-title">⚠️ 常考陷阱</div>
+      宇航员到月球上质量不变，但重力会变——初二暂不深入讲重力，先记住质量不变这个结论。</div>
+      <p>单位：千克(kg)，还有吨(t)、克(g)、毫克(mg)。换算：1t=1000kg，1kg=1000g，1g=1000mg</p>
+      <p>测量工具：天平。使用步骤：</p>
+      <ul>
+        <li>水平放置，游码归零</li>
+        <li>调节平衡螺母，使指针指在分度盘中央（口诀"左加右减"）</li>
+        <li>物体放左盘，砝码放右盘，用镍子夹取砝码，先加大砝码后加小砝码，最后调游码</li>
+        <li>物体质量 = 砝码总质量 + 游码示数</li>
+      </ul>
+      `
+    },
+    {
+      h:"6.2 密度（本章核心）",
+      body:`
+      <p>定义：某种物质单位体积的质量，反映物质本身的一种特性（同种物质密度一般不变）</p>
+      <div class="callout formula"><div class="callout-title">📐 密度公式</div>
+      <span class="formula-big">ρ = m / V</span><br>
+      单位：千克/米³(kg/m³)、克/厘米³(g/cm³)，换算：1g/cm³ = 1000kg/m³<br>
+      <b>水的密度 ρ水 = 1.0×10³kg/m³ = 1g/cm³（必背）</b><br>
+      冰的密度小于水的密度，所以冰能浮在水面上</div>
+      `
+    },
+    {
+      h:"6.3 密度的应用",
+      body:`
+      <p>密度公式的三种变形：</p>
+      <ul>
+        <li>求密度：ρ = m/V</li>
+        <li>求质量：m = ρV</li>
+        <li>求体积：V = m/ρ</li>
+      </ul>
+      <p>应用举例：鉴别物质种类（测出密度，对照密度表）、求不规则物体的体积（排水法）、判断实心/空心</p>
+      <div class="callout pitfall"><div class="callout-title">⚠️ 易错点</div>
+      密度与质量、体积无关，只与物质种类、状态（温度）有关。计算前单位要统一，g/cm³和kg/m³别混用。<br>
+      空心球问题：先假设实心求出应有质量，再与实际质量比较判断空心。</div>
+      `
+    }
+  ],
+  quiz:[
+    {q:"一块铁的质量是100g，体积是100cm³，把它切成两半后，密度会怎样变化？",opts:["变大","变小","不变"],correct:2,tip:"密度是物质本身的特性，与质量、体积无关，切割后密度不变。"},
+    {q:"调节天平平衡时指针偏右，应该怎么调节平衡螺母？",opts:["向右调","向左调","不需要调"],correct:1,tip:"口诀\"左加右减\"，指针偏右时向左调节平衡螺母。"},
+    {q:"水的密度是多少？",opts:["1.0×10³kg/m³","1.0×10²kg/m³","1.0×10⁴kg/m³"],correct:0,tip:"水的密度=1.0×10³kg/m³=1g/cm³，是本章必背数值。"}
+  ]
+}
+];
+
+// ---------- Render ----------
+const introGrid = document.getElementById("introGrid");
+const chaptersRoot = document.getElementById("chaptersRoot");
+
+chapters.forEach((ch,idx)=>{
+  // intro mini card
+  const card = document.createElement("div");
+  card.className = "mini-card";
+  card.onclick = ()=>goTo(ch.id);
+  card.innerHTML = `<img src="${ch.img}" alt="${ch.title}"><h4>第${ch.num}章 ${ch.title}</h4><span>${ch.desc}</span>`;
+  introGrid.appendChild(card);
+
+  // chapter section
+  const sec = document.createElement("section");
+  sec.className = "chapter";
+  sec.id = ch.id;
+
+  let sectionsHtml = ch.sections.map((s,i)=>`
+    <div class="section ${i===0?'open':''}">
+      <div class="section-head" onclick="this.parentElement.classList.toggle('open')">
+        <span>${s.h}</span><span class="chev">▾</span>
+      </div>
+      <div class="section-body">${s.body}</div>
+    </div>
+  `).join("");
+
+  let quizHtml = `<div class="quiz-box">
+    <h3>🎯 小测验</h3>
+    <div class="quiz-sub">做完这几题，检查一下自己是不是真的掌握了</div>
+    ${ch.quiz.map((q,qi)=>`
+      <div class="quiz-q" data-qi="${qi}" data-ch="${ch.id}">
+        <div class="quiz-q-text">${qi+1}. ${q.q}</div>
+        <div class="quiz-opts">
+          ${q.opts.map((o,oi)=>`<button class="quiz-opt" onclick="answerQuiz('${ch.id}',${qi},${oi})">${o}</button>`).join("")}
+        </div>
+        <div class="quiz-result" style="display:none;"></div>
+      </div>
+    `).join("")}
+  </div>`;
+
+  const prevId = idx>0 ? chapters[idx-1].id : null;
+  const nextId = idx<chapters.length-1 ? chapters[idx+1].id : null;
+
+  sec.innerHTML = `
+    <div class="chapter-head">
+      <img class="chapter-img" src="${ch.img}" alt="${ch.title}">
+      <div class="chapter-title-wrap">
+        <div class="chapter-eyebrow">第${ch.num}章 · 初二物理上学期</div>
+        <h1 class="chapter-title">${ch.title}</h1>
+        <div class="chapter-desc">${ch.desc}</div>
+      </div>
+    </div>
+    ${sectionsHtml}
+    ${quizHtml}
+    <div class="chapter-nav">
+      <button class="nav-btn ghost" ${prevId?'':'disabled'} onclick="${prevId?`goTo('${prevId}')`:''}">← 上一章</button>
+      <button class="nav-btn" ${nextId?'':'disabled'} onclick="${nextId?`goTo('${nextId}')`:`goTo('intro')`}">${nextId? '下一章 →' : '回到首页 →'}</button>
+    </div>
+  `;
+  chaptersRoot.appendChild(sec);
+});
+
+const visited = new Set(JSON.parse(localStorage.getItem("physics8_visited")||"[]"));
+
+function updateProgress(){
+  const total = chapters.length;
+  const done = chapters.filter(c=>visited.has(c.id)).length;
+  document.getElementById("progressText").textContent = `${done}/${total}`;
+  document.getElementById("progressFill").style.width = (done/total*100)+"%";
+  chapters.forEach(c=>{
+    const item = document.querySelector(`.nav-item[data-target="${c.id}"]`);
+    if(item){
+      if(visited.has(c.id)) item.classList.add("done");
+      else item.classList.remove("done");
+    }
+  });
+}
+
+function goTo(id){
+  document.querySelectorAll(".chapter").forEach(el=>el.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelectorAll(".nav-item").forEach(el=>el.classList.remove("active"));
+  const navItem = document.querySelector(`.nav-item[data-target="${id}"]`);
+  if(navItem) navItem.classList.add("active");
+  if(id!=="intro"){
+    visited.add(id);
+    localStorage.setItem("physics8_visited", JSON.stringify([...visited]));
+    updateProgress();
+  }
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function answerQuiz(chId, qi, oi){
+  const chapter = chapters.find(c=>c.id===chId);
+  const q = chapter.quiz[qi];
+  const qBox = document.querySelector(`.quiz-q[data-ch="${chId}"][data-qi="${qi}"]`);
+  const opts = qBox.querySelectorAll(".quiz-opt");
+  opts.forEach((btn,i)=>{
+    btn.disabled = true;
+    if(i===q.correct) btn.classList.add("correct");
+    else if(i===oi) btn.classList.add("wrong");
+  });
+  const result = qBox.querySelector(".quiz-result");
+  result.style.display = "block";
+  result.style.color = (oi===q.correct) ? "var(--good)" : "var(--warn)";
+  result.textContent = (oi===q.correct ? "✅ 答对了！" : "❌ 差一点。") + "　" + q.tip;
+}
+
+updateProgress();
+</script>
+</body>
+</html>
